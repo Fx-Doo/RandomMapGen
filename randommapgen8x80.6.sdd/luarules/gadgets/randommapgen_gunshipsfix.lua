@@ -25,8 +25,6 @@ if gadgetHandler:IsSyncedCode() then
 	function gadget:UnitCreated(unitID, unitDefID)
 		if gunships[unitDefID] == true then
 			Spring.MoveCtrl.SetGunshipMoveTypeData(unitID, "useSmoothMesh", false)
-			Spring.MoveCtrl.SetGunshipMoveTypeData(unitID, "wantedHeight", 210)
-			Spring.Echo("movectrled")
 		end
 	end
 	
