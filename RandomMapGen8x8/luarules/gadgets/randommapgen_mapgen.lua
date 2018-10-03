@@ -36,15 +36,15 @@ end
 
 local function makeSeed()
 	local seed = 5381
-	
 	local allPlayers = Spring.GetPlayerList()
 	for i,v in ipairs(allPlayers) do
 		local name, _, _, teamID, allyTeamID, pingTime, cpuUsage, country, rank = Spring.GetPlayerInfo(v)
-		local x, y, z = Spring.GetTeamStartPosition(teamID)
+		if not (string.sub(name, 1, 1) == "~") then
+			local x, y, z = Spring.GetTeamStartPosition(teamID)
+			local randhash = '' .. teamID .. allyTeamID .. pingTime .. cpuUsage .. country .. rank .. x .. y .. z
 
-		local randhash = '' .. teamID .. allyTeamID .. pingTime .. cpuUsage .. country .. rank .. x .. y .. z
-
-		seed = scrambleNumber(seed, randhash)
+			seed = scrambleNumber(seed, randhash)
+		end
 	end
 
 	local allAllies = Spring.GetAllyTeamList()
@@ -56,7 +56,6 @@ local function makeSeed()
 		end
 		seed = scrambleNumber(seed, randhash)
 	end
-
 	return seed
 end
 	---
