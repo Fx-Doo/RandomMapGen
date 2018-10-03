@@ -94,11 +94,11 @@ if gadgetHandler:IsSyncedCode() then
 		
 		Cells,Size = GroupCellsByHeight(Cells,Size) -- Apply congruence to cells heights
 		CreateSmoothMesh(Cells,Size)
-		while Size >= sqr do
+		while Size >= sqr*2 do
 			Cells,Size = SquareDiamondSmoothing(Cells, Size) -- Complete rendering to squareSize/2
 		end
 		
-		while Size >= sqr do -- failsafe to make sure final stage is squareSize/2
+		while Size >= sqr*2 do -- failsafe to make sure final stage is squareSize/2
 			Cells,Size = FinishCells(Cells,Size)
 		end
 		
