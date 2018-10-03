@@ -24,42 +24,6 @@ if gadgetHandler:IsSyncedCode() then
 		startingSize = startingSize*2
 	end
 
-	--- RANDOMIZER By CarRepairer(2008)
-local function scrambleNumber(number, randhash)
-	local numberReturn = number
-	for i = 1, randhash:len() do			
-		numberReturn = numberReturn * 33 + randhash:byte(i)
-		numberReturn = numberReturn % 65535
-	end
-	return numberReturn 
-end
-
-local function makeSeed()
-	local seed = 5381
-	local allPlayers = Spring.GetPlayerList()
-	for i,v in ipairs(allPlayers) do
-		local name, _, _, teamID, allyTeamID, pingTime, cpuUsage, country, rank = Spring.GetPlayerInfo(v)
-		if not (string.sub(name, 1, 1) == "~") then
-			local x, y, z = Spring.GetTeamStartPosition(teamID)
-			local randhash = '' .. teamID .. allyTeamID .. pingTime .. cpuUsage .. country .. rank .. x .. y .. z
-
-			seed = scrambleNumber(seed, randhash)
-		end
-	end
-
-	local allAllies = Spring.GetAllyTeamList()
-	for i,v in ipairs(allAllies) do
-		local xmin, zmin, xmax, zmax = Spring.GetAllyTeamStartBox(v)
-		local randhash = ''
-		if (xmin) then  -- ally start boxes are not always available
-			randhash = '' .. xmin .. zmin .. xmax .. zmax
-		end
-		seed = scrambleNumber(seed, randhash)
-	end
-	return seed
-end
-	---
-
 	-- PARAMS
 	local height
 	local roadlevelfactor
@@ -77,7 +41,7 @@ end
 		if Spring.GetMapOptions() and Spring.GetMapOptions().seed and tonumber(Spring.GetMapOptions().seed) ~= 0 then
 			randomSeed = tonumber(Spring.GetMapOptions().seed)
 		else
-			randomSeed = makeSeed()%10000
+			randomSeed = math.random(1,10000)
 		end
 		math.randomseed( randomSeed )
 		Spring.Echo("Random Seed = "..tostring(randomSeed)..", Symtype = "..tostring((Spring.GetMapOptions() and Spring.GetMapOptions().symtype and tonumber(Spring.GetMapOptions().symtype)) or 0))
