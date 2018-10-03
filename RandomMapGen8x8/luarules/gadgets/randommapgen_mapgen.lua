@@ -107,9 +107,8 @@ if gadgetHandler:IsSyncedCode() then
 		end
 
 		Cells, Size = FlattenRoads(Cells, Size)
-		nbMetalSpots = nbTeams * nbMetalSpots
 		Spring.SetHeightMapFunc(ApplyHeightMap, Cells) -- Apply the height map
-		
+		nbMetalSpots = nbTeams * nbMetalSpots
 		metalspots = GenerateMetalSpots(nbMetalSpots)
 		SetUpMetalSpots(metalspots)
 		
