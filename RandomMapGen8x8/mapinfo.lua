@@ -5,9 +5,9 @@
 
 local mapinfo = {
 	name        = "RandomMapGen8x8",
-	shortname   = "SBR",
+	shortname   = "RMG",
 	description = "A random Map generator",
-	author      = "random",
+	author      = "Doo",
 	version     = "0.6",
 	--mutator   = "deployment";
 	--mapfile   = "", --// location of smf/sm3 file (optional)

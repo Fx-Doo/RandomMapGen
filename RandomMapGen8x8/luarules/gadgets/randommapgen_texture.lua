@@ -79,23 +79,23 @@ local texturePool = {
 	-- [0] == original map texture
 	[1] = {
 		texture = texturePath.."v.png",
-		size = 92,
-		tile = 1,
+		size = 64,
+		tile = 1/64,
 	},
 	[2] = {
 		texture = texturePath.."b.png",
-		size = 92,
-		tile = 1,
+		size = 64,
+		tile = 1/64,
 	},
 	[3] = {
 		texture = texturePath.."n.png",
-		size = 92,
-		tile = 1,
+		size = 64,
+		tile = 1/64,
 	},
 	[4] = {
 		texture = texturePath.."m.png",
-		size = 92,
-		tile = 1,
+		size = 64,
+		tile = 1/64,
 	},
 }
 
