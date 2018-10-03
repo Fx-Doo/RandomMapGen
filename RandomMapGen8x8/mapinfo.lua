@@ -8,7 +8,7 @@ local mapinfo = {
 	shortname   = "RMG",
 	description = "A random Map generator",
 	author      = "Doo",
-	version     = "0.6",
+	version     = "VERSIONXX",
 	--mutator   = "deployment";
 	--mapfile   = "", --// location of smf/sm3 file (optional)
 	modtype     = 3, --// 1=primary, 0=hidden, 3=map
