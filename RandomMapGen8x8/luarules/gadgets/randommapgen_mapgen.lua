@@ -58,6 +58,7 @@ if gadgetHandler:IsSyncedCode() then
 		roadlevelfactor = math.random(10,100)/10 -- higher means flatter roads
 		flattenRatio = math.random(25,200)/100 -- lower means flatter final render
 		heightGrouping = math.random(1,128) -- higher means more plateaus, lower means smoother but more regular height differences
+		heightGrouping = (heightGrouping)/flattenRatio
 		nbRoads = math.random(1,12) -- avg 1-2 road(s) per 256^2 square
 		nbMountains = math.random(1,6) -- avg 1-3 mountain(s) per 256^2 square
 		levelground = math.random(-50,100)
