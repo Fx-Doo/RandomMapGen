@@ -46,6 +46,13 @@ if gadgetHandler:IsSyncedCode() then
 		math.randomseed( randomSeed )
 		Spring.Echo("Random Seed = "..tostring(randomSeed)..", Symtype = "..tostring((Spring.GetMapOptions() and Spring.GetMapOptions().symtype and tonumber(Spring.GetMapOptions().symtype)) or 0))
 		
+		local nbTeams = 0
+		for i, team in pairs (Spring.GetTeamList()) do
+			if team ~= Spring.GetGaiaTeamID() then
+				nbTeams = nbTeams + 1
+			end
+		end
+		
 	-- PARAMS
 		height = math.random(256,1024)
 		roadlevelfactor = math.random(10,100)/10 -- higher means flatter roads
@@ -54,7 +61,7 @@ if gadgetHandler:IsSyncedCode() then
 		nbRoads = math.random(1,12) -- avg 1-2 road(s) per 256^2 square
 		nbMountains = math.random(1,6) -- avg 1-3 mountain(s) per 256^2 square
 		levelground = math.random(-50,100)
-		nbMetalSpots = math.random(6,14)
+		nbMetalSpots = math.random(5,9)
 		symType = (Spring.GetMapOptions() and Spring.GetMapOptions().symtype and ((tonumber(Spring.GetMapOptions().symtype))~= 0) and tonumber(Spring.GetMapOptions().symtype)) or math.random(1,5)
 		typemap = math.random(1,4)
 		if typemap == 1 then
@@ -99,7 +106,7 @@ if gadgetHandler:IsSyncedCode() then
 		end
 
 		Cells, Size = FlattenRoads(Cells, Size)
-		
+		nbMetalSpots = nbTeams * nbMetalSpots
 		Spring.SetHeightMapFunc(ApplyHeightMap, Cells) -- Apply the height map
 		
 		metalspots = GenerateMetalSpots(nbMetalSpots)
@@ -199,7 +206,7 @@ if gadgetHandler:IsSyncedCode() then
 	end
 	
 	function CloseMetalSpot(x,z,metal)
-		local radiussqr = 256^2
+		local radiussqr = 192^2
 		for i, pos in pairs(metal) do
 			local addsqr =  (pos.x - x)^2 + (pos.z - z)^2
 			if addsqr < radiussqr then
