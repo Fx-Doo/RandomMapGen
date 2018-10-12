@@ -86,6 +86,7 @@ if gadgetHandler:IsSyncedCode() then
 		Heightranges = height
 		symTable = GenerateSymmetryTable() -- Generate a symmetry table (symTable.x[x] => x')
 		local Cells,Size = GenerateCells(startingSize) -- generate the initial cell(s)
+		roadHeight = meanHeight + math.random(-6,6)*20
 		roads = GenerateRoads(Size)	-- Generate a set of "roads"
 		mountains = GenerateMountains(Size) -- Generate a set of "mountains"		
 		Cells,Size = ApplySymmetry(Cells,Size, symTable) -- Apply a first symmetry (prolly useless but it's not heavy anyway)
@@ -482,7 +483,7 @@ if gadgetHandler:IsSyncedCode() then
 						ct = ct + (((cells[x+size] and cells[x+size][z] and 1) or 0)) * ((roads and roads[x+size] and roads[x+size][z] and roadlevelfactor) or (math.random(0,25)/100))
 						local d = ((cells[x+size] and cells[x+size][z+size]) or 0) * ((roads and roads[x+size] and roads[x+size][z+size] and roadlevelfactor) or (math.random(0,25)/100))
 						ct = ct + (((cells[x+size] and cells[x+size][z+size] and 1) or 0)) * ((roads and roads[x+size] and roads[x+size][z+size] and roadlevelfactor) or (math.random(0,25)/100))
-						cells[x+newsize][z+newsize] = (120*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
+						cells[x+newsize][z+newsize] = (roadHeight*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
 					end
 				end
 			end
@@ -516,7 +517,7 @@ if gadgetHandler:IsSyncedCode() then
 						ct = ct + (((cells[x-newsize] and cells[x-newsize][z] and 1) or 0)) * ((roads and roads[x-newsize] and roads[x-newsize][z] and roadlevelfactor) or (math.random(0,25)/100))
 						local d = ((cells[x+newsize] and cells[x+newsize][z]) or 0) * ((roads and roads[x+newsize] and roads[x+newsize][z] and roadlevelfactor) or (math.random(0,25)/100))
 						ct = ct + (((cells[x+newsize] and cells[x+newsize][z] and 1) or 0)) * ((roads and roads[x+newsize] and roads[x+newsize][z] and roadlevelfactor) or (math.random(0,25)/100))
-						cells[x][z] = (120*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
+						cells[x][z] = (roadHeight*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
 					end
 				end
 				variance = (variance*nCells + (cells[x][z] - meanHeight)^2) / (nCells+1)
@@ -588,7 +589,7 @@ if gadgetHandler:IsSyncedCode() then
 						ct = ct + (((cells[x-newsize] and cells[x-newsize][z] and 1) or 0)) * ((roads and roads[x-newsize] and roads[x-newsize][z] and roadlevelfactor) or (math.random(0,25)/100))
 						local d = ((cells[x+newsize] and cells[x+newsize][z]) or 0) * ((roads and roads[x+newsize] and roads[x+newsize][z] and roadlevelfactor) or (math.random(0,25)/100))
 						ct = ct + (((cells[x+newsize] and cells[x+newsize][z] and 1) or 0)) * ((roads and roads[x+newsize] and roads[x+newsize][z] and roadlevelfactor) or (math.random(0,25)/100))
-						cells[x][z] = (120*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
+						cells[x][z] = (roadHeight*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
 					end
 				end
 				variance = (variance*nCells + (cells[x][z] - meanHeight)^2) / (nCells+1)
