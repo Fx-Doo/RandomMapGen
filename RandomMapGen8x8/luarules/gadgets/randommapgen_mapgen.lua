@@ -35,9 +35,16 @@ if gadgetHandler:IsSyncedCode() then
 	local nbMetalSpots
 	local symType
 	local typemap
+	local flatness -- goal standard derivation of height = math.sqrt(variance) (per 8x8 sqr)
+	local variance
+	local meanHeight
+	local nCells
 	
 	function gadget:Initialize()
 		local randomSeed
+		variance = 0
+		meanHeight = 1
+		nCells = 0
 		if Spring.GetMapOptions() and Spring.GetMapOptions().seed and tonumber(Spring.GetMapOptions().seed) ~= 0 then
 			randomSeed = tonumber(Spring.GetMapOptions().seed)
 		else
@@ -54,6 +61,7 @@ if gadgetHandler:IsSyncedCode() then
 		end
 		
 	-- PARAMS
+		flatness = math.random(0,500)
 		height = math.random(256,1024)
 		roadlevelfactor = math.random(10,100)/10 -- higher means flatter roads
 		flattenRatio = math.random(25,200)/100 -- lower means flatter final render
@@ -408,10 +416,14 @@ if gadgetHandler:IsSyncedCode() then
 	
 	function GenerateCells(size)
 		local cells = {}
+		nCells = 0
 		for x = 0,sizeX,size do
 			for z = 0,sizeZ,size do
 				cells[x] = cells[x] or {}
 				cells[x][z] = math.random(0,size/8)
+				meanHeight = size/16
+				variance = (variance*nCells + (cells[x][z] - meanHeight)^2)/(nCells+1)
+				nCells = nCells + 1
 			end
 		end
 		return cells,size
@@ -432,6 +444,15 @@ if gadgetHandler:IsSyncedCode() then
 		return cells, newsize
 	end
 	
+	function PickRandom(range, variance)
+		local ratio = 1
+		stdDerivation = math.sqrt(variance)
+		if stdDerivation > flatness then
+			ratio = flatness/stdDerivation
+		end
+		return (math.random(-range*ratio, range*ratio))
+	end
+	
 	function SquareDiamond(cells, size, heightranges)
 		local newsize = size / 2
 		for x = 0,sizeX,size do --SquareCenter
@@ -449,7 +470,7 @@ if gadgetHandler:IsSyncedCode() then
 						ct = ct + ((cells[x+size] and cells[x+size][z] and 1) or 0)
 						local d = (cells[x+size] and cells[x+size][z+size]) or 0
 						ct = ct + ((cells[x+size] and cells[x+size][z+size] and 1) or 0)
-						cells[x+newsize][z+newsize] = (a+b+c+d)/ct + math.random (-heightChangeRange,heightChangeRange)
+						cells[x+newsize][z+newsize] = (a+b+c+d)/ct + PickRandom(heightChangeRange, variance)
 					elseif roads and roads[x+newsize] and roads[x+newsize][z+newsize] then
 						cells[x+newsize] = cells[x+newsize] or {}
 						local ct = 0
@@ -466,6 +487,8 @@ if gadgetHandler:IsSyncedCode() then
 				end
 			end
 		end
+		variance = 0
+		nCells = 0
 		for x = 0,sizeX,newsize do -- Edges
 			for z = 0,sizeZ,newsize do
 				local heightChangeRange = (mountains and mountains[x] and mountains[x][z] and heightranges*2) or heightranges/4
@@ -481,7 +504,7 @@ if gadgetHandler:IsSyncedCode() then
 						ct = ct + ((cells[x-newsize] and cells[x-newsize][z] and 1) or 0)
 						local d = (cells[x+newsize] and cells[x+newsize][z]) or 0
 						ct = ct + ((cells[x+newsize] and cells[x+newsize][z] and 1) or 0)
-						cells[x][z] = (a+b+c+d)/ct + math.random (-heightChangeRange,heightChangeRange)
+						cells[x][z] = (a+b+c+d)/ct + PickRandom(heightChangeRange, variance)
 					elseif roads and roads[x] and roads[x][z] then
 						cells[x] = cells[x] or {}
 						local ct = 0
@@ -496,6 +519,8 @@ if gadgetHandler:IsSyncedCode() then
 						cells[x][z] = (120*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
 					end
 				end
+				variance = (variance*nCells + (cells[x][z] - meanHeight)^2) / (nCells+1)
+				nCells = nCells + 1
 			end
 		end
 		heightranges = heightranges/2
@@ -530,11 +555,13 @@ if gadgetHandler:IsSyncedCode() then
 						ct = ct + (((cells[x+size] and cells[x+size][z] and 1) or 0)) * ((roads and roads[x+size] and roads[x+size][z] and roadlevelfactor) or (math.random(0,25)/100))
 						local d = ((cells[x+size] and cells[x+size][z+size]) or 0) * ((roads and roads[x+size] and roads[x+size][z+size] and roadlevelfactor) or (math.random(0,25)/100))
 						ct = ct + (((cells[x+size] and cells[x+size][z+size] and 1) or 0)) * ((roads and roads[x+size] and roads[x+size][z+size] and roadlevelfactor) or (math.random(0,25)/100))
-						cells[x+newsize][z+newsize] = (120*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
+						cells[x+newsize][z+newsize] = (roadHeight*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
 					end
 				end
 			end
 		end
+		variance = 0
+		nCells = 0
 		for x = 0,sizeX,newsize do -- Edges
 			for z = 0,sizeZ,newsize do
 				if not (cells[x] and cells[x][z]) then
@@ -564,12 +591,16 @@ if gadgetHandler:IsSyncedCode() then
 						cells[x][z] = (120*roadlevelfactor+a+b+c+d)/(ct+roadlevelfactor)
 					end
 				end
+				variance = (variance*nCells + (cells[x][z] - meanHeight)^2) / (nCells+1)
+				nCells = nCells + 1
 			end
 		end
 		return cells, newsize
 	end
 	
 	function FinalSmoothing(cells, size)
+		variance = 0
+		nCells = 0
 		for x = 0,sizeX,size do
 			for z = 0,sizeZ,size do
 				local ct = 0
@@ -590,6 +621,8 @@ if gadgetHandler:IsSyncedCode() then
 				local h = (cells[x+size] and cells[x+size][z+size]) or 0
 				ct = ct + ((cells[x+size] and cells[x+size][z+size] and 1) or 0)
 				cells[x][z] = (a+b+c+d+e+f+g+h)/ct
+				variance = (variance*nCells + (cells[x][z] - meanHeight)^2) / (nCells+1)
+				nCells = nCells + 1
 			end
 		end
 		return cells, size
