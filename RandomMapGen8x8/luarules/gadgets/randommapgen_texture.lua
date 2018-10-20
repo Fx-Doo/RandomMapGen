@@ -74,7 +74,7 @@ local textureSet = {'desert/', 'temperate/', 'arctic/', 'moon/'}
 local usetextureSet = textureSet[math.random(1,4)]
 local texturePath = 'unittextures/tacticalview/'..usetextureSet
 
-local TEXTURE_COUNT = 4
+local TEXTURE_COUNT = 8
 local texturePool = {
 	-- [0] == original map texture
 	[1] = {
@@ -94,6 +94,26 @@ local texturePool = {
 	},
 	[4] = {
 		texture = texturePath.."m.png",
+		size = 64,
+		tile = 1/64,
+	},
+	[5] = {
+		texture = texturePath.."uwv.png",
+		size = 64,
+		tile = 1/64,
+	},
+	[6] = {
+		texture = texturePath.."uwb.png",
+		size = 64,
+		tile = 1/64,
+	},
+	[7] = {
+		texture = texturePath.."uwn.png",
+		size = 64,
+		tile = 1/64,
+	},
+	[8] = {
+		texture = texturePath.."uwm.png",
 		size = 64,
 		tile = 1/64,
 	},
@@ -236,6 +256,26 @@ function SetTextureSet(textureSetName)
 		},
 		[4] = {
 			texture = texturePath.."m.png",
+			size = 92,
+			tile = 1,
+		},
+		[5] = {
+			texture = texturePath.."uwv.png",
+			size = 92,
+			tile = 1,
+		},
+		[6] = {
+			texture = texturePath.."uwb.png",
+			size = 92,
+			tile = 1,
+		},
+		[7] = {
+			texture = texturePath.."uwn.png",
+			size = 92,
+			tile = 1,
+		},
+		[8] = {
+			texture = texturePath.."uwm.png",
 			size = 92,
 			tile = 1,
 		},
@@ -439,14 +479,26 @@ local function Shutdown()
 end
 
 function SlopeType(x,z)
-	if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
-		return 4
-	elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-		return 1
-	elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-		return 2
+	if Spring.TestBuildOrder(UnitDefNames["armfmine3"].id, x, Spring.GetGroundHeight(x,z),z, 0) == 0 then
+		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+			return 4
+		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 1
+		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 2
+		else
+			return 3
+		end
 	else
-		return 3
+		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+			return 8
+		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 5
+		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 6
+		else
+			return 7
+		end
 	end
 end
 

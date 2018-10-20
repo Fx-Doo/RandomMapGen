@@ -39,6 +39,8 @@ if gadgetHandler:IsSyncedCode() then
 	local variance
 	local meanHeight
 	local nCells
+	local roadHeight
+	local metalspotvalue
 	
 	function gadget:Initialize()
 		local randomSeed
@@ -61,32 +63,67 @@ if gadgetHandler:IsSyncedCode() then
 		end
 		
 	-- PARAMS
-		flatness = math.random(0,500)
+		metalspotvalue = math.random(128,255)
+		flatness = math.random(300,500)
 		height = math.random(256,1024)
 		roadlevelfactor = math.random(10,100)/10 -- higher means flatter roads
-		flattenRatio = math.random(25,200)/100 -- lower means flatter final render
-		heightGrouping = math.random(1,128) -- higher means more plateaus, lower means smoother but more regular height differences
+		flattenRatio = 1 -- math.random(25,200)/100 -- lower means flatter final render
+		heightGrouping = math.random(10,64) -- higher means more plateaus, lower means smoother but more regular height differences
 		heightGrouping = (heightGrouping)/flattenRatio
-		nbRoads = math.random(1,12) -- avg 1-2 road(s) per 256^2 square
-		nbMountains = math.random(1,6) -- avg 1-3 mountain(s) per 256^2 square
-		levelground = math.random(-50,100)
-		nbMetalSpots = math.random(5,9)
+		nbRoads = math.random(1,12)
+		nbMountains = math.random(1,6)
+		nbMetalSpots = math.random(4,7)
 		symType = (Spring.GetMapOptions() and Spring.GetMapOptions().symtype and ((tonumber(Spring.GetMapOptions().symtype))~= 0) and tonumber(Spring.GetMapOptions().symtype)) or math.random(1,5)
 		typemap = math.random(1,4)
 		if typemap == 1 then
 			Spring.SetGameRulesParam("typemap", "arctic")
+			heightGrouping = math.floor(heightGrouping*0.3) + 1
+			height = math.floor(height*1.5)
+			flatness = flatness * 1.5
+			nbRoads = math.floor(nbRoads*0.4)
+			roadHeight = height
+			roadlevelfactor = roadlevelfactor
+			nbMountains = math.floor(nbMountains*2)
+			nbMetalSpots = math.floor(nbMetalSpots*1)
+			levelground = 0
 		elseif typemap == 2 then
 			Spring.SetGameRulesParam("typemap", "desert")
+			heightGrouping = math.random(60,80)
+			height = math.floor(height*1.0)
+			flatness = flatness
+			nbRoads = math.floor(nbRoads*0)
+			roadHeight = height
+			roadlevelfactor = roadlevelfactor / 10
+			nbMountains = math.floor(nbMountains*0.2)
+			nbMetalSpots = math.floor(nbMetalSpots*1.0)
+			levelground = math.random(-80,110)
 		elseif typemap == 3 then
 			Spring.SetGameRulesParam("typemap", "moon")
+			heightGrouping = math.floor(heightGrouping*0.1) + 1
+			height = math.floor(height*0.6)
+			flatness = flatness * 0.8
+			nbRoads = math.floor(nbRoads*0)
+			roadlevelfactor = roadlevelfactor/10
+			roadHeight = height
+			nbMountains = math.floor(nbMountains*1.5)
+			nbMetalSpots = math.floor(nbMetalSpots*1.1)
+			levelground = 300
 		elseif typemap == 4 then
 			Spring.SetGameRulesParam("typemap", "temperate")
+			heightGrouping = math.floor(heightGrouping*0.8) + 1
+			height = math.floor(height*1)
+			flatness = flatness
+			nbRoads = math.floor(nbRoads*1)
+			roadHeight = -40
+			roadlevelfactor = roadlevelfactor/5
+			nbMountains = math.floor(nbMountains*1.3)
+			nbMetalSpots = math.floor(nbMetalSpots*1)
+			levelground = math.random(-100,40)
 		end
 		
 		Heightranges = height
 		symTable = GenerateSymmetryTable() -- Generate a symmetry table (symTable.x[x] => x')
 		local Cells,Size = GenerateCells(startingSize) -- generate the initial cell(s)
-		roadHeight = meanHeight + math.random(-6,6)*20
 		roads = GenerateRoads(Size)	-- Generate a set of "roads"
 		mountains = GenerateMountains(Size) -- Generate a set of "mountains"		
 		Cells,Size = ApplySymmetry(Cells,Size, symTable) -- Apply a first symmetry (prolly useless but it's not heavy anyway)
@@ -117,7 +154,7 @@ if gadgetHandler:IsSyncedCode() then
 
 		Cells, Size = FlattenRoads(Cells, Size)
 		Spring.SetHeightMapFunc(ApplyHeightMap, Cells) -- Apply the height map
-		nbMetalSpots = nbTeams * nbMetalSpots
+		nbMetalSpots = math.floor(math.sqrt(nbTeams) * nbMetalSpots)
 		metalspots = GenerateMetalSpots(nbMetalSpots)
 		SetUpMetalSpots(metalspots)
 		
@@ -179,7 +216,7 @@ if gadgetHandler:IsSyncedCode() then
 			for z = 0,sizeZ,sqr/2 do
 				if metal and metal[x] and metal[x][z] then
 					local X, Z = math.floor(x/16), math.floor(z/16)
-					Spring.SetMetalAmount(X,Z, 255)
+					Spring.SetMetalAmount(X,Z, metalspotvalue)
 				else
 					local X, Z = math.floor(x/16), math.floor(z/16)
 					Spring.SetMetalAmount(X,Z, 0)		
@@ -328,6 +365,9 @@ if gadgetHandler:IsSyncedCode() then
 	function GenerateRoads(size)
 		local ROADS = {}
 		local road = {}
+		if nRoads == 1 then
+			return ROADS
+		end
 		for i = 1, nbRoads do
 			if math.random(0,1) == 1 then
 				rSize = 16*2^(math.random(1,3))
@@ -388,6 +428,9 @@ if gadgetHandler:IsSyncedCode() then
 	
 	function GenerateMountains(size)
 		local MOUNTAINS = {}
+		if nbMountains == 0 then
+			return ROADS
+		end
 		for i = 1,nbMountains do
 			local x = math.random(0,sizeX)
 			local z = math.random(0,sizeZ)
@@ -410,7 +453,11 @@ if gadgetHandler:IsSyncedCode() then
 	function ApplyHeightMap(cells)
 		for x = 0,sizeX,sqr do
 			for z = 0,sizeZ,sqr do
-				Spring.SetHeightMap(x,z, cells[x][z] * flattenRatio + levelground)
+				local height = cells[x][z] * flattenRatio + levelground -- avoid -2 < height < 2 because it looks weird...
+				if height >= -1 and height <= 3 then
+					height = 3
+				end
+				Spring.SetHeightMap(x,z, height )
 			end
 		end
 	end
@@ -447,11 +494,26 @@ if gadgetHandler:IsSyncedCode() then
 	
 	function PickRandom(range, variance)
 		local ratio = 1
+		local min = 0
+		local max = 0
 		stdDerivation = math.sqrt(variance)
 		if stdDerivation > flatness then
 			ratio = flatness/stdDerivation
 		end
-		return (math.random(-range*ratio, range*ratio))
+		if typemap == 1 then
+			min = -range*ratio
+			max = range*ratio
+		elseif typemap == 2 then
+			min = -range*ratio
+			max = range*ratio
+		elseif typemap == 3 then
+			min = -range*ratio
+			max = 0
+		elseif typemap == 4 then
+			min = -range*ratio
+			max = range*ratio
+		end
+		return (math.random(min, max))
 	end
 	
 	function SquareDiamond(cells, size, heightranges)
