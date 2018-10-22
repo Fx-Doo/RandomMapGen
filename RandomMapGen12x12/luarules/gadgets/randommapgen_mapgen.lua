@@ -72,7 +72,7 @@ if gadgetHandler:IsSyncedCode() then
 		heightGrouping = (heightGrouping)/flattenRatio
 		nbRoads = math.random(1,12)
 		nbMountains = math.random(1,6)
-		nbMetalSpots = math.random(4,7)
+		nbMetalSpots = math.random(7,11)
 		symType = (Spring.GetMapOptions() and Spring.GetMapOptions().symtype and ((tonumber(Spring.GetMapOptions().symtype))~= 0) and tonumber(Spring.GetMapOptions().symtype)) or math.random(1,5)
 		typemap = math.random(1,4)
 		if typemap == 1 then
