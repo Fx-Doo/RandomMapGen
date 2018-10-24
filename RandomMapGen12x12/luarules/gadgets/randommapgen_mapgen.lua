@@ -6,8 +6,8 @@ function gadget:GetInfo()
 		author	= "Doo",
 		date	= "July,2016",
 		layer	= -100,
-		enabled = true,
-	}
+        enabled = (select(1, Spring.GetGameFrame()) <= 0),
+		}
 end
 
 
@@ -252,7 +252,11 @@ if gadgetHandler:IsSyncedCode() then
 	end
 	
 	function CloseMetalSpot(x,z,metal)
-		local radiussqr = 192^2
+		local radiussqr = 320^2
+		local symdissqr = (symTable(x,z).x - x)^2 + (symTable(x,z).z - z)^2
+		if symdissqr < radiussqr then
+			return true
+		end
 		for i, pos in pairs(metal) do
 			local addsqr =  (pos.x - x)^2 + (pos.z - z)^2
 			if addsqr < radiussqr then
@@ -278,14 +282,15 @@ if gadgetHandler:IsSyncedCode() then
 			x = x - x%metalSpotSize
 			z = z - z%metalSpotSize
 			metal[i] = {x = x, z = z, size = metalSpotSize}
+			metal[n+i] = {x = symTable(x,z).x, z = symTable(x,z).z, size = metalSpotSize}
 		end
 		for i, pos in pairs (metal) do
 			for v = -pos.size/2,pos.size/2 -1, sqr/2 do
 				for w = -pos.size/2,pos.size/2 -1, sqr/2 do
 					METAL[pos.x + v] = METAL[pos.x + v] or {}
 					METAL[pos.x + v][pos.z + w] = true
-					METAL[symTable(pos.x + v, pos.z + w,sqr/2).x] = METAL[symTable(pos.x + v, pos.z + w,sqr/2).x] or {}
-					METAL[symTable(pos.x + v, pos.z + w,sqr/2).x][symTable(pos.x + v, pos.z + w,sqr/2).z] = true
+					-- METAL[symTable(pos.x + v, pos.z + w,sqr/2).x] = METAL[symTable(pos.x + v, pos.z + w,sqr/2).x] or {}
+					-- METAL[symTable(pos.x + v, pos.z + w,sqr/2).x][symTable(pos.x + v, pos.z + w,sqr/2).z] = true
 				end
 			end
 		end
