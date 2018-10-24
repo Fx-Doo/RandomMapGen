@@ -185,6 +185,9 @@ end
 local function drawCopySquare()
 	gl.TexRect(-1,1,1,-1)
 end
+local function drawRectOnTex(x1,z1,x2,z2,sx1,sz1, sx2,sz2)
+	gl.TexRect(x1,z1,x2,z2,sx1,sz1, sx2,sz2)
+end
 
 function SetTextureSet(textureSetName)
 	usetextureSet = textureSetName..'/'
@@ -353,11 +356,6 @@ function gadget:DrawGenesis()
 	GaussianInitialize(fulltex)
 	gb:Initialize()
 	gb:Execute()
-	gl.Texture(texOut)
-	gl.RenderToTexture(fulltex, drawCopySquare)
-	gl.Texture(false)
-	gb:Finalize()
-	
 	for x = 0,Game.mapSizeX - 1, SQUARE_SIZE do -- Create sqr textures for each sqr
 		for z = 0,Game.mapSizeZ - 1, SQUARE_SIZE do
 			sqrTex[x] = sqrTex[x] or {}
@@ -370,7 +368,7 @@ function gadget:DrawGenesis()
 				wrap_t = GL.CLAMP_TO_EDGE,
 				fbo = true,
 			})
-			glTexture(fulltex) -- apply corresponding part of fulltex to each sqrTex 
+			glTexture(texOut) -- apply corresponding part of fulltex to each sqrTex 
 			gl.RenderToTexture(sqrTex[x][z], drawTextureOnSquare, 0,0,SQUARE_SIZE, x/Game.mapSizeX, z/Game.mapSizeZ, SQUARE_SIZE/Game.mapSizeX, SQUARE_SIZE/Game.mapSizeZ)
 			glTexture(false)
 			
@@ -380,6 +378,11 @@ function gadget:DrawGenesis()
 			sqrTex[x][z] = nil
 		end
 	end
+	gb:Finalize()
+	gl.DeleteTextureFBO(fulltex)
+	fulltex = nil
+	gl.DeleteTextureFBO(texOut)
+	texOut = nil
 	mapfullyprocessed = true
 end
 
