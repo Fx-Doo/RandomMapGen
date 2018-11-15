@@ -81,8 +81,8 @@ if gadgetHandler:IsSyncedCode() then
 		nbRoads = math.random(1,12)
 		nbMountains = math.random(1,6)
 		nbMetalSpots = math.random(28,44)
-		symType = 6--(mapOptions() and mapOptions().symtype and ((tonumber(mapOptions().symtype))~= 0) and tonumber(mapOptions().symtype)) or math.random(1,6)
-		typemap = 4--math.random(1,4)
+		symType = (mapOptions() and mapOptions().symtype and ((tonumber(mapOptions().symtype))~= 0) and tonumber(mapOptions().symtype)) or math.random(1,6)
+		typemap = math.random(1,4)
 		if typemap == 1 then
 			Spring.SetGameRulesParam("typemap", "arctic")
 			heightGrouping = math.floor(heightGrouping*0.3) + 1
@@ -167,8 +167,8 @@ if gadgetHandler:IsSyncedCode() then
 		Cells, Size = FlattenRoads(Cells, Size)
 		Spring.SetHeightMapFunc(ApplyHeightMap, Cells) -- Apply the height map
 		nbMetalSpots = math.floor(math.sqrt(nbTeams^(1.75)) * nbMetalSpots)
-		-- metalspots = GenerateMetalSpots(nbMetalSpots)
-		-- SetUpMetalSpots(metalspots)
+		metalspots = GenerateMetalSpots(nbMetalSpots)
+		SetUpMetalSpots(metalspots)
 		
 		Cells = nil
 		metalspots = nil
