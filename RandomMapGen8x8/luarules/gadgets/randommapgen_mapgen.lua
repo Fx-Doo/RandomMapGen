@@ -16,6 +16,13 @@ end
 --------------------------------------------------------------------------------
 if gadgetHandler:IsSyncedCode() then
 	-- MAPDEPENDANT VARS
+	local gdheight = Spring.GetGroundHeight
+	local testBuild = Spring.TestBuildOrder
+	local mapOptions = Spring.GetMapOptions
+	local SetHeightMap = Spring.SetHeightMap
+	local SetSmoothMesh = Spring.SetSmoothMesh
+	local SetMetal = Spring.SetMetalAmount
+	
 	local sizeX = Game.mapSizeX
 	local sizeZ = Game.mapSizeZ
 	local sqr = Game.squareSize
@@ -47,13 +54,13 @@ if gadgetHandler:IsSyncedCode() then
 		variance = 0
 		meanHeight = 1
 		nCells = 0
-		if Spring.GetMapOptions() and Spring.GetMapOptions().seed and tonumber(Spring.GetMapOptions().seed) ~= 0 then
-			randomSeed = tonumber(Spring.GetMapOptions().seed)
+		if mapOptions() and mapOptions().seed and tonumber(mapOptions().seed) ~= 0 then
+			randomSeed = tonumber(mapOptions().seed)
 		else
 			randomSeed = math.random(1,10000)
 		end
 		math.randomseed( randomSeed )
-		Spring.Echo("Random Seed = "..tostring(randomSeed)..", Symtype = "..tostring((Spring.GetMapOptions() and Spring.GetMapOptions().symtype and tonumber(Spring.GetMapOptions().symtype)) or 0))
+		Spring.Echo("Random Seed = "..tostring(randomSeed)..", Symtype = "..tostring((mapOptions() and mapOptions().symtype and tonumber(mapOptions().symtype)) or 0))
 		
 		local nbTeams = 0
 		for i, team in pairs (Spring.GetTeamList()) do
@@ -120,6 +127,9 @@ if gadgetHandler:IsSyncedCode() then
 			nbMetalSpots = math.floor(nbMetalSpots*1)
 			levelground = math.random(-100,40)
 		end
+		if symType == 6 then
+			nbMetalSpots = nbMetalSpots * 2
+		end
 		
 		Heightranges = height
 		symTable = GenerateSymmetryTable() -- Generate a symmetry table (symTable.x[x] => x')
@@ -171,7 +181,7 @@ if gadgetHandler:IsSyncedCode() then
 	SmoothMeshFunc = function(cells, size)
 		for x = 0,sizeX, size do
 			for z = 0, sizeZ, size do
-				Spring.SetSmoothMesh(x, z, cells[x][z] * flattenRatio + levelground + 120)
+				SetSmoothMesh(x, z, cells[x][z] * flattenRatio + levelground + 120)
 			end
 		end
 	end
@@ -216,10 +226,10 @@ if gadgetHandler:IsSyncedCode() then
 			for z = 0,sizeZ,sqr/2 do
 				if metal and metal[x] and metal[x][z] then
 					local X, Z = math.floor(x/16), math.floor(z/16)
-					Spring.SetMetalAmount(X,Z, metalspotvalue)
+					SetMetal(X,Z, metalspotvalue)
 				else
 					local X, Z = math.floor(x/16), math.floor(z/16)
-					Spring.SetMetalAmount(X,Z, 0)		
+					SetMetal(X,Z, 0)		
 				end
 			end
 		end
@@ -247,6 +257,10 @@ if gadgetHandler:IsSyncedCode() then
 			symTable = function(x,z,size)
 				return {x = sizeZ - z, z = sizeX - x}
 			end
+		elseif symType == 6 then
+			symTable = function(x,z,size)
+				return {x = x, z = z}
+			end
 		end
 		return symTable
 	end
@@ -254,6 +268,9 @@ if gadgetHandler:IsSyncedCode() then
 	function CloseMetalSpot(x,z,metal)
 		local radiussqr = 320^2
 		local symdissqr = (symTable(x,z).x - x)^2 + (symTable(x,z).z - z)^2
+		if symType == 6 then
+			symdissqr = 321^2
+		end
 		if symdissqr < radiussqr then
 			return true
 		end
@@ -274,7 +291,7 @@ if gadgetHandler:IsSyncedCode() then
 			local x = math.random(metalSpotSize,sizeX-metalSpotSize)
 			local z = math.random(metalSpotSize,sizeZ-metalSpotSize)
 			local metalSpotCloseBy = CloseMetalSpot(x,z,metal)
-				while (Spring.TestBuildOrder(UnitDefNames["armmoho"].id, x,Spring.GetGroundHeight(x,z),z, 1) == 0 and Spring.TestBuildOrder(UnitDefNames["armuwmme"].id, x,Spring.GetGroundHeight(x,z),z, 1) == 0) or metalSpotCloseBy == true do
+				while (testBuild(UnitDefNames["armmoho"].id, x,gdheight(x,z),z, 1) == 0 and testBuild(UnitDefNames["armuwmme"].id, x,gdheight(x,z),z, 1) == 0) or metalSpotCloseBy == true do
 					x = math.random(metalSpotSize,sizeX-metalSpotSize)
 					z = math.random(metalSpotSize,sizeZ-metalSpotSize)
 					metalSpotCloseBy = CloseMetalSpot(x,z,metal)
@@ -462,7 +479,7 @@ if gadgetHandler:IsSyncedCode() then
 				if height >= -1 and height <= 3 then
 					height = 3
 				end
-				Spring.SetHeightMap(x,z, height )
+				SetHeightMap(x,z, height )
 			end
 		end
 	end
