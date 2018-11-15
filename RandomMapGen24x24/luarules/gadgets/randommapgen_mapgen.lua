@@ -90,7 +90,7 @@ if gadgetHandler:IsSyncedCode() then
 			flatness = flatness * 1.5
 			nbRoads = math.floor(nbRoads*0.4)
 			roadHeight = height
-			roadlevelfactor = roadlevelfactor
+			roadlevelfactor = roadlevelfactor/4
 			nbMountains = math.floor(nbMountains*2)
 			nbMetalSpots = math.floor(nbMetalSpots*1)
 			levelground = 0
@@ -102,7 +102,7 @@ if gadgetHandler:IsSyncedCode() then
 			nbRoads = math.floor(nbRoads*0)
 			roadHeight = height
 			roadlevelfactor = roadlevelfactor / 10
-			nbMountains = math.floor(nbMountains*0.2)
+			nbMountains = math.floor(nbMountains*0.6)
 			nbMetalSpots = math.floor(nbMetalSpots*1.0)
 			levelground = math.random(-80,110)
 		elseif typemap == 3 then
