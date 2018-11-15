@@ -384,6 +384,7 @@ function gadget:DrawGenesis()
 			sqrTex[x][z] = nil
 		end
 	end
+	Spring.SetMapShadingTexture("$grass", texOut)
 	if gl.CreateShader then
 		gb:Finalize()
 		gl.DeleteTextureFBO(texOut)
