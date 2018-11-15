@@ -353,9 +353,13 @@ function gadget:DrawGenesis()
 	if not fulltex then
 		return
 	end
-	GaussianInitialize(fulltex)
-	gb:Initialize()
-	gb:Execute()
+	if gl.CreateShader then
+		GaussianInitialize(fulltex)
+		gb:Initialize()
+		gb:Execute()
+	else
+		texOut = fulltex
+	end
 	for x = 0,Game.mapSizeX - 1, SQUARE_SIZE do -- Create sqr textures for each sqr
 		for z = 0,Game.mapSizeZ - 1, SQUARE_SIZE do
 			sqrTex[x] = sqrTex[x] or {}
@@ -378,7 +382,11 @@ function gadget:DrawGenesis()
 			sqrTex[x][z] = nil
 		end
 	end
-	gb:Finalize()
+	if gl.CreateShader then
+		gb:Finalize()
+		gl.DeleteTextureFBO(texOut)
+		texOut = nil
+	end
 	gl.DeleteTextureFBO(fulltex)
 	fulltex = nil
 	gl.DeleteTextureFBO(texOut)
