@@ -97,20 +97,20 @@ local mapinfo = {
 	-- skyReflectModTex = "lavareflect.bmp",
 	-- lightEmissionTex = "lolemit.png",
 	-- specularTex = "lolspec.png",
-	-- splatDistrTex = "ssbreplr.png",
-	-- splatDetailTex = "cooledrockdet.png",
-    -- splatDetailNormalDiffuseAlpha = 1,
-    -- splatDetailNormalTex = {
-         -- "sandnormals.png",
-         -- "cooledrocknormals.png",
-         -- "normalsgrass.png",
-         -- "rocknorm.png",
-          -- alpha = true,
-   -- },
+	splatDistrTex = "splatrep.png",
+	splatDetailTex = "Rock.png",
+    splatDetailNormalDiffuseAlpha = 1,
+    splatDetailNormalTex = {
+         "Grass.png", -- Grass
+         "Rock.png", -- Rocky grass
+         "DepthSand.png", -- shallowSand
+         "DepthSand.png", -- Depth Sand
+          alpha = true,
+   },
    },
    splats = {
-      texScales = {0.006, 0.006, 0.012, 0.012},
-      texMults = {0.5, 0.5, 0.5, 0.5},
+      texScales = {0.006, 0.02, 0.012, 0.012},
+      texMults = {0.5, 0.3, 0.35, 0},
    },
 
 	atmosphere = {
