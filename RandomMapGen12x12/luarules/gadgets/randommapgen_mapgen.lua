@@ -259,7 +259,7 @@ if gadgetHandler:IsSyncedCode() then
 			symTable = function(x,z,size)
 				return {x = sizeZ - z, z = sizeX - x}
 			end
-		elseif symType == 6 then -- diagonal c2 symTable
+		elseif symType == 6 then
 			symTable = function(x,z,size)
 				return {x = x, z = z}
 			end
@@ -277,7 +277,7 @@ if gadgetHandler:IsSyncedCode() then
 			return true
 		end
 		for i = 1, #metal do
-			pos = metal[i]
+			local pos = metal[i]
 			local addsqr =  (pos.x - x)^2 + (pos.z - z)^2
 			if addsqr < radiussqr then
 				return true
@@ -290,7 +290,7 @@ if gadgetHandler:IsSyncedCode() then
 		local metalSpotSize = 48
 		local metal = {}
 		local METAL = {}
-		for i = 1,n do
+		for i = 1,n*2,2 do
 			local x = math.random(metalSpotSize,sizeX-metalSpotSize)
 			local z = math.random(metalSpotSize,sizeZ-metalSpotSize)
 			local metalSpotCloseBy = CloseMetalSpot(x,z,metal)
@@ -302,7 +302,7 @@ if gadgetHandler:IsSyncedCode() then
 			x = x - x%metalSpotSize
 			z = z - z%metalSpotSize
 			metal[i] = {x = x, z = z, size = metalSpotSize}
-			metal[n+i] = {x = symTable(x,z).x, z = symTable(x,z).z, size = metalSpotSize}
+			metal[i+1] = {x = symTable(x,z).x, z = symTable(x,z).z, size = metalSpotSize}
 		end
 		for i = 1, #metal do
 			local pos = metal[i]
