@@ -228,10 +228,10 @@ if gadgetHandler:IsSyncedCode() then
 			for z = 0,sizeZ,sqr/2 do
 				if metal and metal[x] and metal[x][z] then
 					local X, Z = math.floor(x/16), math.floor(z/16)
-					SetMetalAmount(X,Z, metalspotvalue)
+					SetMetal(X,Z, metalspotvalue)
 				else
 					local X, Z = math.floor(x/16), math.floor(z/16)
-					SetMetalAmount(X,Z, 0)		
+					SetMetal(X,Z, 0)		
 				end
 			end
 		end
@@ -276,7 +276,8 @@ if gadgetHandler:IsSyncedCode() then
 		if symdissqr < radiussqr then
 			return true
 		end
-		for i, pos in pairs(metal) do
+		for i = 1, #metal do
+			pos = metal[i]
 			local addsqr =  (pos.x - x)^2 + (pos.z - z)^2
 			if addsqr < radiussqr then
 				return true
@@ -303,7 +304,8 @@ if gadgetHandler:IsSyncedCode() then
 			metal[i] = {x = x, z = z, size = metalSpotSize}
 			metal[n+i] = {x = symTable(x,z).x, z = symTable(x,z).z, size = metalSpotSize}
 		end
-		for i, pos in pairs (metal) do
+		for i = 1, #metal do
+			local pos = metal[i]
 			for v = -pos.size/2,pos.size/2 -1, sqr/2 do
 				for w = -pos.size/2,pos.size/2 -1, sqr/2 do
 					METAL[pos.x + v] = METAL[pos.x + v] or {}
@@ -399,8 +401,8 @@ if gadgetHandler:IsSyncedCode() then
 				local curZ = math.random(0,sizeZ)
 				curX = curX - curX%sqr/2
 				curZ = curZ - curZ%sqr/2
-				local positions = {[0] = {x = curX, z = curZ, ["size"] = rSize}}
-				for j = 1,256 do
+				local positions = {[1] = {x = curX, z = curZ, ["size"] = rSize}}
+				for j = 2,256 do
 					if math.random(0,1) == 1 then
 						curX = curX + rSize
 					else
@@ -420,8 +422,8 @@ if gadgetHandler:IsSyncedCode() then
 				local curZ = math.random(0,sizeZ)
 				curX = curX - curX%sqr/2
 				curZ = curZ - curZ%sqr/2
-				local positions = {[0] = {x = curX, z = curZ, ["size"] = rSize}}
-				for j = 1,256 do
+				local positions = {[1] = {x = curX, z = curZ, ["size"] = rSize}}
+				for j = 2,256 do
 					if math.random(0,1) == 1 then
 						curX = curX - rSize
 					else
@@ -437,8 +439,10 @@ if gadgetHandler:IsSyncedCode() then
 				road[i] = positions
 			end	
 		end	
-		for i, rpositions in pairs(road) do
-			for j, pos in pairs(rpositions) do
+		for i = 1, nbRoads do
+			local rpositions = road[i]
+			for j = 1, #rpositions do
+				local pos = rpositions[j]
 				for v = -pos.size/2,pos.size/2 -1, sqr/2 do
 					for w = -pos.size/2,pos.size/2 -1, sqr/2 do
 						ROADS[pos.x + v] = ROADS[pos.x + v] or {}
