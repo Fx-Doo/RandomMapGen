@@ -49,6 +49,8 @@ if gadgetHandler:IsSyncedCode() then
 	local nCells
 	local roadHeight
 	local metalspotvalue
+	local sizeFactor
+	local nbGeos
 	
 	function gadget:Initialize()
 		local randomSeed
@@ -78,9 +80,11 @@ if gadgetHandler:IsSyncedCode() then
 		flattenRatio = 1 -- math.random(25,200)/100 -- lower means flatter final render
 		heightGrouping = math.random(10,64) -- higher means more plateaus, lower means smoother but more regular height differences
 		heightGrouping = (heightGrouping)/flattenRatio
-		nbRoads = math.random(1,12)
-		nbMountains = math.random(1,6)
-		nbMetalSpots = math.random(28,44)
+		sizeFactor = ((sizeX / 512)^2)/(8*8)
+		nbRoads = math.random(1,7) * sizeFactor
+		nbMountains = math.random(1,4) * sizeFactor
+		nbMetalSpots = math.random(4,7) * sizeFactor
+		nbGeos = math.random(0,2) * sizeFactor
 		symType = (mapOptions() and mapOptions().symtype and ((tonumber(mapOptions().symtype))~= 0) and tonumber(mapOptions().symtype)) or math.random(1,6)
 		typemap = math.random(1,4)
 		if typemap == 1 then
@@ -168,6 +172,9 @@ if gadgetHandler:IsSyncedCode() then
 		nbMetalSpots = math.floor(math.sqrt(nbTeams^(1.75)) * nbMetalSpots)
 		metalspots = GenerateMetalSpots(nbMetalSpots)
 		SetUpMetalSpots(metalspots)
+		nbGeos = math.floor(math.sqrt(nbTeams^(1.75)) * nbGeos)
+		Geos = GenerateGeoSpots(nbGeos)
+		SetUpGeoSpots(Geos)
 		
 		Cells = nil
 		metalspots = nil
@@ -233,6 +240,12 @@ if gadgetHandler:IsSyncedCode() then
 					SetMetal(X,Z, 0)		
 				end
 			end
+		end
+	end
+	
+	function SetUpGeoSpots(geos)
+		for i, pos in pairs(geos) do
+			Spring.CreateFeature("geovent", pos.x, gdheight(pos.x, pos.z), pos.z)
 		end
 	end
 	
@@ -315,6 +328,49 @@ if gadgetHandler:IsSyncedCode() then
 			end
 		end
 		return METAL
+	end
+
+	function CloseGeoSpot(x,z,geos)
+		local radiussqr = 320^2
+		local symdissqr = (symTable(x,z).x - x)^2 + (symTable(x,z).z - z)^2
+		if symType == 6 then
+			symdissqr = 321^2
+		end
+		if symdissqr < radiussqr then
+			return true
+		end
+		for i = 1, #geos do
+			local pos = geos[i]
+			local addsqr =  (pos.x - x)^2 + (pos.z - z)^2
+			if addsqr < radiussqr then
+				return true
+			end
+		end
+		return false
+	end
+	
+	function GenerateGeoSpots(n)
+		local geos = {}
+		local GEOS = {}
+		for i = 1,n*2,2 do
+			local x = math.random(0,sizeX)
+			local z = math.random(0,sizeZ)
+			local geoSpotCloseBy = CloseMetalSpot(x,z,geos)
+				while (testBuild(UnitDefNames["armafus"].id, x,gdheight(x,z),z, 1) == 0 or testBuild(UnitDefNames["armuwadves"].id, x,gdheight(x,z),z, 1) == 0) or geoSpotCloseBy == true do
+					x = math.random(0,sizeX)
+					z = math.random(0,sizeZ)
+					geoSpotCloseBy = CloseGeoSpot(x,z,geos)
+				end
+			x = x - x%16
+			z = z - z%16
+			geos[i] = {x = x, z = z}
+			geos[i+1] = {x = symTable(x,z).x, z = symTable(x,z).z}
+		end
+		for i = 1, #geos do
+			local pos = geos[i]
+			GEOS[i] = pos
+		end
+		return GEOS
 	end
 			
 	function ApplySymmetry(cells, size, symTable)
