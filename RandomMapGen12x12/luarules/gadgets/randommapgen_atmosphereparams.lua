@@ -67,9 +67,9 @@ if gadgetHandler:IsSyncedCode() then
 			fogColor = {0.85, 0.7, 0.7, 0.4},
 			}
 			sparams = {
-			groundAmbientColor = {0.4, 0.4, 0.4},
+			groundAmbientColor = {0.4, 0.3, 0.4},
 			groundDiffuseColor = {0.7, 0.7, 0.7},
-			unitAmbientColor = {0.3, 0.3, 0.3},
+			unitAmbientColor = {0.3, 0.2, 0.3},
 			unitDiffuseColor = {0.8, 0.8, 0.8},
 			}
 			minw = r(2,4)
