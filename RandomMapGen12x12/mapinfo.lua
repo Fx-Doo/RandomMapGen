@@ -189,7 +189,7 @@ local mapinfo = {
 
       shoreWaves = true,	
       forceRendering = false,
-      -- normalTexture = "wnormal.png",
+      normalTexture = "waterbump.png",
 	},
 
 teams = { 	[0] = {startPos = {x = 936, z = 5210}},
