@@ -40,11 +40,11 @@ local options = {
 	{
 		key  = "symtype",
 		name = "Symmetry",
-		desc = "0 = Random, 1 = Central, 2 = Vertical, 3 = Horizontal, 4 = diagonal top-left, 5 = diagonal top-right",
+		desc = "0 = Random, 1 = Central, 2 = Vertical, 3 = Horizontal, 4 = diagonal top-left, 5 = diagonal top-right, 6 = no symmetry",
 		type = "number",
 		def  = 0,
 		min = 0,
-		max = 5,
+		max = 6,
 	},
 	
 }
