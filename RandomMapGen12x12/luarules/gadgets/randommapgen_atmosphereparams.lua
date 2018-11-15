@@ -75,6 +75,9 @@ if gadgetHandler:IsSyncedCode() then
 			minw = r(2,4)
 			maxw = r(8,13)
 		elseif typemap == "desert" then
+			Spring.SetMapRenderingParams({
+			   splatTexScales = {0.006, 0.01, 0.02, 0.02},
+			})
 			aparams = {
 			sunColor = {1, 0.8, 0.4, 1},
 			skyColor = {0.1, 0.2, 0.9, 1},
@@ -90,6 +93,9 @@ if gadgetHandler:IsSyncedCode() then
 			minw = r(1,2)
 			maxw = r(8,16)
 		else
+			Spring.SetMapRenderingParams({
+			   splatTexScales = {0.02, 0.015, 0.02, 0.02},
+			})
 			aparams = {
 			sunColor = {1, 0.8, 0.8, 1},
 			skyColor = {0, 0, 0, 1},

@@ -526,16 +526,32 @@ function SplatSlopeType(x,z)
 	if Spring.TestBuildOrder(UnitDefNames["armfmine3"].id, x, Spring.GetGroundHeight(x,z),z, 0) == 0 then
 		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
 			return 1
+		elseif Spring.GetGameRulesParam("typemap") == "moon" then
+			return math.random(1,2)
 		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-			return 1
+			if Spring.GetGameRulesParam("typemap") == "desert" then
+				return (math.random(1,2) == 2) and (math.random(1,2) == 2) and (math.random(1,2) == 2) and (math.random(1,2) == 2) and 2 or 1
+			else
+				return (1)
+			end
 		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-			return 2
+			if Spring.GetGameRulesParam("typemap") == "arctic" then
+				return math.random(1,2)
+			elseif Spring.GetGameRulesParam("typemap") == "temperate" then
+				return (math.random(1,2) == 1) and (math.random(1,2) == 1) and (math.random(1,2) == 1) and 1 or 2
+			else
+				return (2)
+			end
 		else
 			return 2
 		end
 	else
 		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
 			return 3
+		elseif Spring.GetGameRulesParam("typemap") == "moon" then
+			return math.random(1,2)
+		elseif Spring.GetGameRulesParam("typemap") == "arctic" then
+			return (math.random(1,2) == 1) and (math.random(1,2) == 1) and (math.random(1,2) == 1) and 1 or 2
 		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
 			return 3
 		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
