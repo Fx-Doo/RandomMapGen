@@ -182,6 +182,14 @@ local function drawTextureOnMapTex(x,z)
 	gl.TexRect(x1,z1,x2,z2)
 end
 
+local function drawTextureOnMiniMapTex(x,z)
+	local x1 = 2*x/(Game.mapSizeX) - 1
+	local z1 = 2*z/(Game.mapSizeZ) - 1
+	local x2 = 2*(x+8)/(Game.mapSizeX) - 1
+	local z2 = 2*(z+8)/(Game.mapSizeZ) - 1
+	gl.TexRect(x1,z1,x2,z2)
+end
+
 local function drawCopySquare()
 	gl.TexRect(-1,1,1,-1)
 end
@@ -342,6 +350,17 @@ function gadget:DrawGenesis()
 			fbo = true,
 		})
 	end
+	if not minimaptex then -- create fullsize blank tex
+		minimaptex = gl.CreateTexture(Game.mapSizeX/8,Game.mapSizeZ/8,
+		{
+			border = false,
+			min_filter = GL.LINEAR,
+			mag_filter = GL.LINEAR,
+			wrap_s = GL.CLAMP_TO_EDGE,
+			wrap_t = GL.CLAMP_TO_EDGE,
+			fbo = true,
+		})
+	end
 	for texid, itable in pairs(mapTex) do
 		local tex = texturePool[texid].texture
 		glTexture(tex)
@@ -349,6 +368,7 @@ function gadget:DrawGenesis()
 			local x = pos.x
 			local z = pos.z
 			gl.RenderToTexture(fulltex, drawTextureOnMapTex, x, z)
+			gl.RenderToTexture(minimaptex, drawTextureOnMiniMapTex, x, z)
 		end
 		glTexture(false)
 	end
@@ -385,6 +405,7 @@ function gadget:DrawGenesis()
 		end
 	end
 	Spring.SetMapShadingTexture("$grass", texOut)
+	Spring.SetMapShadingTexture("$minimap", minimaptex)
 	if gl.CreateShader then
 		gb:Finalize()
 		gl.DeleteTextureFBO(texOut)
@@ -392,6 +413,8 @@ function gadget:DrawGenesis()
 	end
 	gl.DeleteTextureFBO(fulltex)
 	fulltex = nil
+	gl.DeleteTextureFBO(minimaptex)
+	minimaptex = nil
 	mapfullyprocessed = true
 end
 
