@@ -44,17 +44,17 @@ local splatTex = {}
 local TEXTURE_COUNT = 20
 local splatDetailTexPool = {
 	[1] = {
-		texture = "unittextures/tacticalview/r.bmp",
+		texture = "unittextures/tacticalview/r.png",
 		size = 1,
 		tile = 1,
 	},
 	[2] = {
-		texture = "unittextures/tacticalview/g.bmp",
+		texture = "unittextures/tacticalview/g.png",
 		size = 1,
 		tile = 1,
 	},
 	[3] = {
-		texture = "unittextures/tacticalview/b.bmp",
+		texture = "unittextures/tacticalview/b.png",
 		size = 1,
 		tile = 1,
 	},
@@ -527,9 +527,6 @@ function SplatSlopeType(x,z)
 		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
 			return 1
 		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-			if typemap == "desert" then
-				return 2
-			end
 			return 1
 		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
 			return 2

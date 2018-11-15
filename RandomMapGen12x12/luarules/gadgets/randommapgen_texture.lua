@@ -44,17 +44,17 @@ local splatTex = {}
 local TEXTURE_COUNT = 20
 local splatDetailTexPool = {
 	[1] = {
-		texture = "unittextures/tacticalview/r.bmp",
+		texture = "unittextures/tacticalview/r.png",
 		size = 1,
 		tile = 1,
 	},
 	[2] = {
-		texture = "unittextures/tacticalview/g.bmp",
+		texture = "unittextures/tacticalview/g.png",
 		size = 1,
 		tile = 1,
 	},
 	[3] = {
-		texture = "unittextures/tacticalview/b.bmp",
+		texture = "unittextures/tacticalview/b.png",
 		size = 1,
 		tile = 1,
 	},
