@@ -40,8 +40,25 @@ local CallAsTeam = CallAsTeam
 local textureSet = {'desert/', 'temperate/', 'arctic/', 'moon/'}
 local usetextureSet = textureSet[math.random(1,4)]
 local texturePath = 'unittextures/tacticalview/'..usetextureSet
-
+local splatTex = {}
 local TEXTURE_COUNT = 20
+local splatDetailTexPool = {
+	[1] = {
+		texture = "unittextures/tacticalview/r.bmp",
+		size = 1,
+		tile = 1,
+	},
+	[2] = {
+		texture = "unittextures/tacticalview/g.bmp",
+		size = 1,
+		tile = 1,
+	},
+	[3] = {
+		texture = "unittextures/tacticalview/b.bmp",
+		size = 1,
+		tile = 1,
+	},
+}
 local texturePool = {
 	-- [0] == original map texture
 	[1] = {
@@ -304,7 +321,7 @@ function SetTextureSet(textureSetName)
 }
 end
 
-function GaussianInitialize(fullTex)
+function GaussianInitialize(fullTex, strength)
 
 	texIn = fullTex
 	texOut = gl.CreateTexture(SQUARE_SIZE,SQUARE_SIZE,
@@ -325,7 +342,7 @@ function GaussianInitialize(fullTex)
 		unusedTexId = nil,
 		downScale = 2,
 		linearSampling = true,
-		sigma = 3.0,
+		sigma = strength,
 		halfKernelSize = 5,
 		valMult = 1.0,
 		repeats = 2,
@@ -361,6 +378,18 @@ function gadget:DrawGenesis()
 			fbo = true,
 		})
 	end
+	if not splattex then -- create fullsize blank tex
+		splattex = gl.CreateTexture(Game.mapSizeX/8,Game.mapSizeZ/8,
+		{
+			format = GL_RGBA32F,
+			border = false,
+			min_filter = GL.LINEAR,
+			mag_filter = GL.LINEAR,
+			wrap_s = GL.CLAMP_TO_EDGE,
+			wrap_t = GL.CLAMP_TO_EDGE,
+			fbo = true,
+		})
+	end
 	for texid, itable in pairs(mapTex) do
 		local tex = texturePool[texid].texture
 		glTexture(tex)
@@ -372,11 +401,21 @@ function gadget:DrawGenesis()
 		end
 		glTexture(false)
 	end
+	for texid, itable in pairs(splatTex) do
+		local splat = splatDetailTexPool[texid].texture
+		glTexture(splat)
+		for i, pos in pairs(itable) do
+			local x = pos.x
+			local z = pos.z
+			gl.RenderToTexture(splattex, drawTextureOnMapTex, x, z)
+		end
+		glTexture(false)
+	end
 	if not fulltex then
 		return
 	end
 	if gl.CreateShader then
-		GaussianInitialize(fulltex)
+		GaussianInitialize(fulltex,3)
 		gb:Initialize()
 		gb:Execute()
 	else
@@ -415,6 +454,21 @@ function gadget:DrawGenesis()
 	fulltex = nil
 	gl.DeleteTextureFBO(minimaptex)
 	minimaptex = nil
+	if gl.CreateShader then
+		GaussianInitialize(splattex,1.5)
+		gb:Initialize()
+		gb:Execute()
+	else
+		texOut = splattex
+	end
+	Spring.SetMapShadingTexture("$ssmf_splat_distr", splattex)
+	if gl.CreateShader then
+		gb:Finalize()
+		gl.DeleteTextureFBO(texOut)
+		texOut = nil
+	end
+	gl.DeleteTextureFBO(splattex)
+	splattex = nil
 	mapfullyprocessed = true
 end
 
@@ -422,11 +476,15 @@ local function UpdateAll()
 	for x = 0, Game.mapSizeX-1, 8 do
 		for z = 0, Game.mapSizeZ-1, 8 do
 			local tex = SlopeType(x, z)
+			local splat = SplatSlopeType(x, z)
 			-- mapTex[x] = mapTex[x] or {}
 			-- mapTex[x][z] = texturePool[SlopeType(x, z)].texture
 			mapTex[tex] = mapTex[tex] or {}
 			local ct = #mapTex[tex]
 			mapTex[tex][ct + 1] = {x = x, z = z}
+			splatTex[splat] = splatTex[splat] or {}
+			local ctsplat = #splatTex[splat]
+			splatTex[splat][ctsplat + 1] = {x = x, z = z}
 		end
 	end
 end
@@ -460,6 +518,30 @@ function SlopeType(x,z)
 			return 18
 		else
 			return 19
+		end
+	end
+end
+
+function SplatSlopeType(x,z)
+	if Spring.TestBuildOrder(UnitDefNames["armfmine3"].id, x, Spring.GetGroundHeight(x,z),z, 0) == 0 then
+		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+			return 1
+		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 1
+		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 2
+		else
+			return 2
+		end
+	else
+		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+			return 3
+		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 3
+		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+			return 3
+		else
+			return 3
 		end
 	end
 end
