@@ -342,13 +342,15 @@ function gadget:DrawGenesis()
 			fbo = true,
 		})
 	end
-	for x= 0 , Game.mapSizeX - 1,8 do -- apply 8x8 textures blocks on the fullsize tex
-		for z= 0 , Game.mapSizeZ - 1,8 do
-			local tex = mapTex[x][z]
-			glTexture(tex)
+	for texid, itable in pairs(mapTex) do
+		local tex = texturePool[texid].texture
+		glTexture(tex)
+		for i, pos in pairs(itable) do
+			local x = pos.x
+			local z = pos.z
 			gl.RenderToTexture(fulltex, drawTextureOnMapTex, x, z)
-			glTexture(false)
 		end
+		glTexture(false)
 	end
 	if not fulltex then
 		return
@@ -389,28 +391,26 @@ function gadget:DrawGenesis()
 	end
 	gl.DeleteTextureFBO(fulltex)
 	fulltex = nil
-	gl.DeleteTextureFBO(texOut)
-	texOut = nil
 	mapfullyprocessed = true
 end
 
 local function UpdateAll()
 	for x = 0, Game.mapSizeX-1, 8 do
 		for z = 0, Game.mapSizeZ-1, 8 do
-			mapTex[x] = mapTex[x] or {}
-			mapTex[x][z] = texturePool[SlopeType(x, z)].texture
+			local tex = SlopeType(x, z)
+			-- mapTex[x] = mapTex[x] or {}
+			-- mapTex[x][z] = texturePool[SlopeType(x, z)].texture
+			mapTex[tex] = mapTex[tex] or {}
+			local ct = #mapTex[tex]
+			mapTex[tex][ct + 1] = {x = x, z = z}
 		end
 	end
 end
 
 local function Shutdown()
 	for x = 0, SQUARES_X-1 do
-		if mapTex[x] then
-			for z = 0, SQUARES_Z-1 do
-				if mapTex[x][z] then
-					spSetMapSquareTexture(x,z, "")
-				end
-			end
+		for z = 0, SQUARES_Z-1 do
+			spSetMapSquareTexture(x,z, "")
 		end
 	end
 	activestate = false
