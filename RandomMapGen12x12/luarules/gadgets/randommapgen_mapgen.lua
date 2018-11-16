@@ -83,8 +83,8 @@ if gadgetHandler:IsSyncedCode() then
 		sizeFactor = ((sizeX / 512)^2)/(8*8)
 		nbRoads = math.random(1,7) * sizeFactor
 		nbMountains = math.random(1,4) * sizeFactor
-		nbMetalSpots = math.random(4,7) * sizeFactor
-		nbGeos = math.random(0,2) * sizeFactor
+		nbMetalSpots = (math.random(25,50)/10) * sizeFactor -- = (2.5-5 * 2 per 8x8 square) * sqrt(nbteams^1.75)
+		nbGeos = (math.random(0,10)/10) * sizeFactor -- = (0-1 * 2 per 8x8 square) * sqrt(nbteams^1.75)
 		symType = (mapOptions() and mapOptions().symtype and ((tonumber(mapOptions().symtype))~= 0) and tonumber(mapOptions().symtype)) or math.random(1,6)
 		typemap = math.random(1,4)
 		if typemap == 1 then
@@ -96,7 +96,7 @@ if gadgetHandler:IsSyncedCode() then
 			roadHeight = height
 			roadlevelfactor = roadlevelfactor/4
 			nbMountains = math.floor(nbMountains*2)
-			nbMetalSpots = math.floor(nbMetalSpots*1)
+			nbMetalSpots = (nbMetalSpots*1)
 			levelground = 0
 		elseif typemap == 2 then
 			Spring.SetGameRulesParam("typemap", "desert")
@@ -107,7 +107,7 @@ if gadgetHandler:IsSyncedCode() then
 			roadHeight = height
 			roadlevelfactor = roadlevelfactor / 10
 			nbMountains = math.floor(nbMountains*0.6)
-			nbMetalSpots = math.floor(nbMetalSpots*1.0)
+			nbMetalSpots = (nbMetalSpots*1.0)
 			levelground = math.random(-80,110)
 		elseif typemap == 3 then
 			Spring.SetGameRulesParam("typemap", "moon")
@@ -118,7 +118,7 @@ if gadgetHandler:IsSyncedCode() then
 			roadlevelfactor = roadlevelfactor/10
 			roadHeight = height
 			nbMountains = math.floor(nbMountains*1.5)
-			nbMetalSpots = math.floor(nbMetalSpots*1.1)
+			nbMetalSpots = (nbMetalSpots*1.1)
 			levelground = 300
 		elseif typemap == 4 then
 			Spring.SetGameRulesParam("typemap", "temperate")
@@ -129,7 +129,7 @@ if gadgetHandler:IsSyncedCode() then
 			roadHeight = -40
 			roadlevelfactor = roadlevelfactor/5
 			nbMountains = math.floor(nbMountains*1.3)
-			nbMetalSpots = math.floor(nbMetalSpots*1)
+			nbMetalSpots = (nbMetalSpots*1)
 			levelground = math.random(-100,40)
 		end
 		if symType == 6 then
