@@ -83,7 +83,7 @@ if gadgetHandler:IsSyncedCode() then
 		sizeFactor = ((sizeX / 512)^2)/(8*8)
 		nbRoads = math.random(1,7) * sizeFactor
 		nbMountains = math.random(1,4) * sizeFactor
-		nbMetalSpots = (math.random(25,50)/10) * sizeFactor -- = (2.5-5 * 2 per 8x8 square) * sqrt(nbteams^1.75)
+		nbMetalSpots = (math.random(15,35)/10) * sizeFactor -- = (1.5-3.5 * 2 per 8x8 square) * sqrt(nbteams^1.75)
 		nbGeos = (math.random(0,10)/10) * sizeFactor -- = (0-1 * 2 per 8x8 square) * sqrt(nbteams^1.75)
 		symType = (mapOptions() and mapOptions().symtype and ((tonumber(mapOptions().symtype))~= 0) and tonumber(mapOptions().symtype)) or math.random(1,6)
 		typemap = math.random(1,4)
