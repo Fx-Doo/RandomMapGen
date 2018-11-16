@@ -71,6 +71,9 @@ if gadgetHandler:IsSyncedCode() then
 				nbTeams = nbTeams + 1
 			end
 		end
+		if nbTeams < 2 then
+			nbTeams = 2
+		end
 		
 	-- PARAMS
 		metalspotvalue = math.random(128,255)
