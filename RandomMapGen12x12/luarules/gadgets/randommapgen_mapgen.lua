@@ -83,8 +83,8 @@ if gadgetHandler:IsSyncedCode() then
 		sizeFactor = ((sizeX / 512)^2)/(8*8)
 		nbRoads = math.random(1,7) * sizeFactor
 		nbMountains = math.random(1,4) * sizeFactor
-		nbMetalSpots = (math.random(15,35)/10) * sizeFactor -- = (1.5-3.5 * 2 per 8x8 square) * sqrt(nbteams^1.75)
-		nbGeos = (math.random(0,10)/10) * sizeFactor -- = (0-1 * 2 per 8x8 square) * sqrt(nbteams^1.75)
+		nbMetalSpots = (math.random(40,70)/10) * sizeFactor -- = (4-7 * 2 per 8x8 square) * sqrt(nbteams)
+		nbGeos = (math.random(0,1)/10) * sizeFactor -- = (0-2 * 2 per 8x8 square) * sqrt(nbteams)
 		symType = (mapOptions() and mapOptions().symtype and ((tonumber(mapOptions().symtype))~= 0) and tonumber(mapOptions().symtype)) or math.random(1,6)
 		typemap = math.random(1,4)
 		if typemap == 1 then
@@ -169,10 +169,10 @@ if gadgetHandler:IsSyncedCode() then
 
 		Cells, Size = FlattenRoads(Cells, Size)
 		Spring.SetHeightMapFunc(ApplyHeightMap, Cells) -- Apply the height map
-		nbMetalSpots = math.floor(math.sqrt(nbTeams^(1.75)) * nbMetalSpots)
+		nbMetalSpots = math.floor(math.sqrt(nbTeams) * nbMetalSpots)
 		metalspots = GenerateMetalSpots(nbMetalSpots)
 		SetUpMetalSpots(metalspots)
-		nbGeos = math.floor(math.sqrt(nbTeams^(1.75)) * nbGeos)
+		nbGeos = math.floor(math.sqrt(nbTeams) * nbGeos)
 		Geos = GenerateGeoSpots(nbGeos)
 		SetUpGeoSpots(Geos)
 		
