@@ -90,17 +90,19 @@ if gadgetHandler:IsSyncedCode() then
 		nbGeos = (math.random(0,1)/10) * sizeFactor -- = (0-2 * 2 per 8x8 square) * sqrt(nbteams)
 		symType = (mapOptions() and mapOptions().symtype and ((tonumber(mapOptions().symtype))~= 0) and tonumber(mapOptions().symtype)) or math.random(1,6)
 		typemap = math.random(1,4)
+		nbSmooth = 5
 		if typemap == 1 then
 			Spring.SetGameRulesParam("typemap", "arctic")
 			heightGrouping = math.floor(heightGrouping*0.3) + 1
 			height = math.floor(height*1.5)
-			flatness = flatness * 1.5
-			nbRoads = math.floor(nbRoads*0.4)
+			flatness = flatness * 8
+			nbRoads = 0
 			roadHeight = height
 			roadlevelfactor = roadlevelfactor/4
-			nbMountains = math.floor(nbMountains*2)
+			nbMountains = math.floor(nbMountains*4)
 			nbMetalSpots = (nbMetalSpots*1)
 			levelground = 0
+			nbSmooth = 2
 		elseif typemap == 2 then
 			Spring.SetGameRulesParam("typemap", "desert")
 			heightGrouping = math.random(60,80)
@@ -166,7 +168,7 @@ if gadgetHandler:IsSyncedCode() then
 			Cells,Size = FinishCells(Cells,Size)
 		end
 		
-		for i = 1,5 do -- smooth (mean of 8 closest cells), repeated 5 times
+		for i = 1,nbSmooth do -- smooth (mean of 8 closest cells), repeated 5 times
 			Cells, Size = FinalSmoothing(Cells, Size)
 		end
 
@@ -454,7 +456,7 @@ if gadgetHandler:IsSyncedCode() then
 		end
 		for i = 1, nbRoads do
 			if math.random(0,1) == 1 then
-				rSize = 16*2^(math.random(1,3))
+				rSize = 64*2^(math.random(1,3))
 				local curX = math.random(0,sizeX/2)
 				local curZ = math.random(0,sizeZ)
 				curX = curX - curX%sqr/2
@@ -515,17 +517,17 @@ if gadgetHandler:IsSyncedCode() then
 	function GenerateMountains(size)
 		local MOUNTAINS = {}
 		if nbMountains == 0 then
-			return ROADS
+			return MOUNTAINS
 		end
 		for i = 1,nbMountains do
 			local x = math.random(0,sizeX)
 			local z = math.random(0,sizeZ)
-			local size = math.random (64,256)
-			x = x - x%sqr/2
-			z = z - z%sqr/2
-			size = size - size%sqr/2
-			for v = -size, size-1, sqr/2 do
-				for w = -size, size-1, sqr/2 do
+			local size = math.random (256,1024)
+			x = x - x%sqr
+			z = z - z%sqr
+			size = size - size%sqr
+			for v = -size, size-1, sqr do
+				for w = -size, size-1, sqr do
 					if v^2 + w^2 < size^2 then
 						MOUNTAINS[x+v] = MOUNTAINS[x+v] or {}
 						MOUNTAINS[x+v][z+w] = true
@@ -542,6 +544,9 @@ if gadgetHandler:IsSyncedCode() then
 				local height = cells[x][z] * flattenRatio + levelground -- avoid -2 < height < 2 because it looks weird...
 				if height >= -1 and height <= 3 then
 					height = 3
+				end
+				if height <= -150 then
+					height = -150
 				end
 				SetHeightMap(x,z, height )
 			end
@@ -607,7 +612,7 @@ if gadgetHandler:IsSyncedCode() then
 		for x = 0,sizeX,size do --SquareCenter
 			for z = 0,sizeZ,size do
 				if x + newsize <= sizeX and z+newsize <= sizeZ then
-					local heightChangeRange = (mountains and mountains[x+newsize] and mountains[x+newsize][z+newsize] and heightranges*2) or heightranges/4
+					local heightChangeRange = (mountains and mountains[x+newsize] and mountains[x+newsize][z+newsize] and heightranges*1.5) or heightranges/4
 					if not (roads and roads[x+newsize] and roads[x+newsize][z+newsize]) then
 						cells[x+newsize] = cells[x+newsize] or {}
 						local ct = 0
@@ -640,7 +645,7 @@ if gadgetHandler:IsSyncedCode() then
 		nCells = 0
 		for x = 0,sizeX,newsize do -- Edges
 			for z = 0,sizeZ,newsize do
-				local heightChangeRange = (mountains and mountains[x] and mountains[x][z] and heightranges*2) or heightranges/4
+				local heightChangeRange = (mountains and mountains[x] and mountains[x][z] and heightranges*1.5) or heightranges/4
 				if not (cells[x] and cells[x][z]) then
 					if not (roads and roads[x] and roads[x][z]) then
 						cells[x] = cells[x] or {}
@@ -770,6 +775,9 @@ if gadgetHandler:IsSyncedCode() then
 				local h = (cells[x+size] and cells[x+size][z+size]) or 0
 				ct = ct + ((cells[x+size] and cells[x+size][z+size] and 1) or 0)
 				cells[x][z] = (a+b+c+d+e+f+g+h)/ct
+				if typemap == 3 then
+					levelground = math.max(-cells[x][z] + 20,levelground)
+				end
 				variance = (variance*nCells + (cells[x][z] - meanHeight)^2) / (nCells+1)
 				nCells = nCells + 1
 			end

@@ -20,44 +20,40 @@ local UHM_WIDTH = 64
 local UHM_HEIGHT = 64
 local UHM_X = UHM_WIDTH/MAP_WIDTH
 local UHM_Z = UHM_HEIGHT/MAP_HEIGHT
-local BLOCK_SIZE = 8
+local BLOCK_SIZE = 16
 
 local spSetMapSquareTexture = Spring.SetMapSquareTexture
 local spGetMapSquareTexture = Spring.GetMapSquareTexture
 local spGetMyTeamID         = Spring.GetMyTeamID
 local spGetGroundHeight     = Spring.GetGroundHeight
 local spGetGroundOrigHeight = Spring.GetGroundOrigHeight
+local SpGetMetalAmount = Spring.GetMetalAmount
 local floor = math.floor
-
+local rand = math.random
+local SpTestMoveOrder = Spring.TestMoveOrder
+local SpTestBuildOrder = Spring.TestBuildOrder
 if (gadgetHandler:IsSyncedCode()) then
 
 else
 local sqrTex = {}
 local glTexture = gl.Texture
+local glColor = gl.Color
 local glCreateTexture = gl.CreateTexture
+local glTexRect = gl.TexRect
+local glRect = gl.Rect
 local glDeleteTexture = gl.DeleteTexture
+local glRenderToTexture = gl.RenderToTexture
 local CallAsTeam = CallAsTeam
 local textureSet = {'desert/', 'temperate/', 'arctic/', 'moon/'}
-local usetextureSet = textureSet[math.random(1,4)]
+local usetextureSet = textureSet[rand(1,4)]
 local texturePath = 'unittextures/tacticalview/'..usetextureSet
 local splatTex = {}
 local TEXTURE_COUNT = 20
 local splatDetailTexPool = {
-	[1] = {
-		texture = "unittextures/tacticalview/r.png",
-		size = 1,
-		tile = 1,
-	},
-	[2] = {
-		texture = "unittextures/tacticalview/g.png",
-		size = 1,
-		tile = 1,
-	},
-	[3] = {
-		texture = "unittextures/tacticalview/b.png",
-		size = 1,
-		tile = 1,
-	},
+	{1,0,0,1}, --R
+	{0,1,0,1}, --G
+	{0,0,1,1}, --B
+	{0,0,0,1}, --A
 }
 local texturePool = {
 	-- [0] == original map texture
@@ -188,30 +184,45 @@ local function drawTextureOnSquare(x,z,size,sx,sz,xsize, zsize)
 	local z1 = 2*z/SQUARE_SIZE - 1
 	local x2 = 2*(x+size)/SQUARE_SIZE - 1
 	local z2 = 2*(z+size)/SQUARE_SIZE - 1
-	gl.TexRect(x1,z1,x2,z2,sx,sz,sx+xsize,sz+zsize)
+	glTexRect(x1,z1,x2,z2,sx,sz,sx+xsize,sz+zsize)
 end
 
 local function drawTextureOnMapTex(x,z)
 	local x1 = 2*x/Game.mapSizeX - 1
 	local z1 = 2*z/Game.mapSizeZ - 1
-	local x2 = 2*(x+8)/Game.mapSizeX - 1
-	local z2 = 2*(z+8)/Game.mapSizeZ - 1
-	gl.TexRect(x1,z1,x2,z2)
+	local x2 = 2*(x+BLOCK_SIZE)/Game.mapSizeX - 1
+	local z2 = 2*(z+BLOCK_SIZE)/Game.mapSizeZ - 1
+	glTexRect(x1,z1,x2,z2)
+end
+
+local function drawSplatTextureOnMapTex(x,z)
+	local x1 = 2*x/Game.mapSizeX - 1
+	local z1 = 2*z/Game.mapSizeZ - 1
+	local x2 = 2*(x+BLOCK_SIZE)/Game.mapSizeX - 1
+	local z2 = 2*(z+BLOCK_SIZE)/Game.mapSizeZ - 1
+	glRect(x1,z1,x2,z2)
 end
 
 local function drawTextureOnMiniMapTex(x,z)
 	local x1 = 2*x/(Game.mapSizeX) - 1
 	local z1 = 2*z/(Game.mapSizeZ) - 1
-	local x2 = 2*(x+8)/(Game.mapSizeX) - 1
-	local z2 = 2*(z+8)/(Game.mapSizeZ) - 1
-	gl.TexRect(x1,z1,x2,z2)
+	local x2 = 2*(x+BLOCK_SIZE)/(Game.mapSizeX) - 1
+	local z2 = 2*(z+BLOCK_SIZE)/(Game.mapSizeZ) - 1
+	glTexRect(x1,z1,x2,z2)
+end
+local function drawSplatTextureOnMiniMapTex(x,z)
+	local x1 = 2*x/(Game.mapSizeX) - 1
+	local z1 = 2*z/(Game.mapSizeZ) - 1
+	local x2 = 2*(x+BLOCK_SIZE)/(Game.mapSizeX) - 1
+	local z2 = 2*(z+BLOCK_SIZE)/(Game.mapSizeZ) - 1
+	glRect(x1,z1,x2,z2)
 end
 
 local function drawCopySquare()
-	gl.TexRect(-1,1,1,-1)
+	glTexRect(-1,1,1,-1)
 end
 local function drawRectOnTex(x1,z1,x2,z2,sx1,sz1, sx2,sz2)
-	gl.TexRect(x1,z1,x2,z2,sx1,sz1, sx2,sz2)
+	glTexRect(x1,z1,x2,z2,sx1,sz1, sx2,sz2)
 end
 
 function SetTextureSet(textureSetName)
@@ -342,7 +353,7 @@ function GaussianInitialize(fullTex, strength)
 		unusedTexId = nil,
 		downScale = 2,
 		linearSampling = true,
-		sigma = strength,
+		sigma = 3.0/BLOCK_SIZE,
 		halfKernelSize = 5,
 		valMult = 1.0,
 		repeats = 2,
@@ -357,7 +368,7 @@ function gadget:DrawGenesis()
 		return
 	end
 	if not fulltex then -- create fullsize blank tex
-		fulltex = gl.CreateTexture(Game.mapSizeX,Game.mapSizeZ,
+		fulltex = gl.CreateTexture(Game.mapSizeX/BLOCK_SIZE,Game.mapSizeZ/BLOCK_SIZE,
 		{
 			border = false,
 			min_filter = GL.LINEAR,
@@ -368,7 +379,7 @@ function gadget:DrawGenesis()
 		})
 	end
 	if not minimaptex then -- create fullsize blank tex
-		minimaptex = gl.CreateTexture(Game.mapSizeX/8,Game.mapSizeZ/8,
+		minimaptex = gl.CreateTexture(Game.mapSizeX/BLOCK_SIZE,Game.mapSizeZ/BLOCK_SIZE,
 		{
 			border = false,
 			min_filter = GL.LINEAR,
@@ -379,7 +390,7 @@ function gadget:DrawGenesis()
 		})
 	end
 	if not splattex then -- create fullsize blank tex
-		splattex = gl.CreateTexture(Game.mapSizeX/8,Game.mapSizeZ/8,
+		splattex = gl.CreateTexture(Game.mapSizeX/BLOCK_SIZE,Game.mapSizeZ/BLOCK_SIZE,
 		{
 			format = GL_RGBA32F,
 			border = false,
@@ -402,14 +413,14 @@ function gadget:DrawGenesis()
 		glTexture(false)
 	end
 	for texid, itable in pairs(splatTex) do
-		local splat = splatDetailTexPool[texid].texture
-		glTexture(splat)
+		local color = splatDetailTexPool[texid]
+		glColor(color[1],color[2],color[3],color[4])
 		for i, pos in pairs(itable) do
 			local x = pos.x
 			local z = pos.z
-			gl.RenderToTexture(splattex, drawTextureOnMapTex, x, z)
+			glRenderToTexture(splattex, drawSplatTextureOnMapTex, x, z)
 		end
-		glTexture(false)
+		glColor(1,1,1,1)
 	end
 	if not fulltex then
 		return
@@ -434,7 +445,7 @@ function gadget:DrawGenesis()
 				fbo = true,
 			})
 			glTexture(texOut) -- apply corresponding part of fulltex to each sqrTex 
-			gl.RenderToTexture(sqrTex[x][z], drawTextureOnSquare, 0,0,SQUARE_SIZE, x/Game.mapSizeX, z/Game.mapSizeZ, SQUARE_SIZE/Game.mapSizeX, SQUARE_SIZE/Game.mapSizeZ)
+			glRenderToTexture(sqrTex[x][z], drawTextureOnSquare, 0,0,SQUARE_SIZE, x/Game.mapSizeX, z/Game.mapSizeZ, SQUARE_SIZE/Game.mapSizeX, SQUARE_SIZE/Game.mapSizeZ)
 			glTexture(false)
 			
 			gl.GenerateMipmap(sqrTex[x][z]) -- generate mipmap and apply texture to square
@@ -473,12 +484,15 @@ function gadget:DrawGenesis()
 end
 
 local function UpdateAll()
-	for x = 0, Game.mapSizeX-1, 8 do
-		for z = 0, Game.mapSizeZ-1, 8 do
-			local tex = SlopeType(x, z)
-			local splat = SplatSlopeType(x, z)
-			-- mapTex[x] = mapTex[x] or {}
-			-- mapTex[x][z] = texturePool[SlopeType(x, z)].texture
+	local ENVIR = Spring.GetGameRulesParam("typemap")
+	for x = 0, Game.mapSizeX-1, BLOCK_SIZE do
+		for z = 0, Game.mapSizeZ-1, BLOCK_SIZE do
+			local TANK = SpTestMoveOrder(UnitDefNames["armstump"].id, x, 0,z, 0,0,0, true, false, true)
+			local KBOT = SpTestMoveOrder(UnitDefNames["armpw"].id, x, 0,z, 0,0,0, true, false, true)
+			local METAL = SpGetMetalAmount(floor(x/16), floor(z/16)) > 0
+			local UW = SpTestBuildOrder(UnitDefNames["armfmine3"].id, x, 0,z, 0) == 0	
+			local tex = SlopeType(x, z, TANK, KBOT, METAL, UW, ENVIR)
+			local splat = SplatSlopeType(x, z, TANK, KBOT, METAL, UW, ENVIR)
 			mapTex[tex] = mapTex[tex] or {}
 			local ct = #mapTex[tex]
 			mapTex[tex][ct + 1] = {x = x, z = z}
@@ -498,23 +512,23 @@ local function Shutdown()
 	activestate = false
 end
 
-function SlopeType(x,z)
-	if Spring.TestBuildOrder(UnitDefNames["armfmine3"].id, x, Spring.GetGroundHeight(x,z),z, 0) == 0 then
-		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+function SlopeType(x,z,t,k,m,uw,e)
+	if uw then
+		if m then
 			return 16
-		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-			return math.random(1,5)
-		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-			return math.random(6,10)
+		elseif t then
+			return rand(1,5)
+		elseif k then
+			return rand(6,10)
 		else
-			return math.random(11,15)
+			return rand(11,15)
 		end
 	else
-		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+		if m then
 			return 20
-		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+		elseif t then
 			return 17
-		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+		elseif k then
 			return 18
 		else
 			return 19
@@ -522,23 +536,23 @@ function SlopeType(x,z)
 	end
 end
 
-function SplatSlopeType(x,z)
-	if Spring.TestBuildOrder(UnitDefNames["armfmine3"].id, x, Spring.GetGroundHeight(x,z),z, 0) == 0 then
-		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+function SplatSlopeType(x,z,t,k,m,uw,e)
+	if uw then
+		if m then
 			return 1
-		elseif Spring.GetGameRulesParam("typemap") == "moon" then
-			return math.random(1,2)
-		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-			if Spring.GetGameRulesParam("typemap") == "desert" then
-				return (math.random(1,2) == 2) and (math.random(1,2) == 2) and (math.random(1,2) == 2) and (math.random(1,2) == 2) and 2 or 1
+		elseif e == "moon" then
+			return rand(1,2)
+		elseif t then
+			if e == "desert" then
+				return (rand(1,2) == 2) and (rand(1,2) == 2) and (rand(1,2) == 2) and (rand(1,2) == 2) and 2 or 1
 			else
 				return (1)
 			end
-		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
-			if Spring.GetGameRulesParam("typemap") == "arctic" then
-				return math.random(1,2)
-			elseif Spring.GetGameRulesParam("typemap") == "temperate" then
-				return (math.random(1,2) == 1) and (math.random(1,2) == 1) and (math.random(1,2) == 1) and 1 or 2
+		elseif k then
+			if e == "arctic" then
+				return rand(1,2)
+			elseif e == "temperate" then
+				return (rand(1,2) == 1) and (rand(1,2) == 1) and (rand(1,2) == 1) and 1 or 2
 			else
 				return (2)
 			end
@@ -546,15 +560,15 @@ function SplatSlopeType(x,z)
 			return 2
 		end
 	else
-		if Spring.GetMetalAmount(math.floor(x/16), math.floor(z/16)) > 0 then
+		if m then
 			return 3
-		elseif Spring.GetGameRulesParam("typemap") == "moon" then
-			return math.random(1,2)
-		elseif Spring.GetGameRulesParam("typemap") == "arctic" then
-			return (math.random(1,2) == 1) and (math.random(1,2) == 1) and (math.random(1,2) == 1) and 1 or 2
-		elseif Spring.TestMoveOrder(UnitDefNames["armstump"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+		elseif e == "moon" then
+			return rand(1,2)
+		elseif e == "arctic" then
+			return (rand(1,2) == 1) and (rand(1,2) == 1) and (rand(1,2) == 1) and 1 or 2
+		elseif t then
 			return 3
-		elseif Spring.TestMoveOrder(UnitDefNames["armpw"].id, x, Spring.GetGroundHeight(x,z),z, 0,0,0, true, false, true) then
+		elseif k then
 			return 3
 		else
 			return 3
