@@ -11,6 +11,8 @@ function gadget:GetInfo()
   }
 end
 
+local useBlur = false
+
 local MAP_WIDTH = Game.mapSizeX
 local MAP_HEIGHT = Game.mapSizeZ
 local SQUARE_SIZE = 1024
@@ -367,6 +369,12 @@ function gadget:DrawGenesis()
 	if mapfullyprocessed == true then
 		return
 	end
+	if useBlur == true and not (gl.CreateShader) then
+		useBlur = false
+	end
+	local usedsplat
+	local usedgrass
+	local usedminimap
 	if not fulltex then -- create fullsize blank tex
 		fulltex = gl.CreateTexture(Game.mapSizeX/BLOCK_SIZE,Game.mapSizeZ/BLOCK_SIZE,
 		{
@@ -425,7 +433,7 @@ function gadget:DrawGenesis()
 	if not fulltex then
 		return
 	end
-	if gl.CreateShader then
+	if useBlur then
 		GaussianInitialize(fulltex,3)
 		gb:Initialize()
 		gb:Execute()
@@ -455,31 +463,55 @@ function gadget:DrawGenesis()
 		end
 	end
 	Spring.SetMapShadingTexture("$grass", texOut)
+	usedgrass = texOut
 	Spring.SetMapShadingTexture("$minimap", minimaptex)
-	if gl.CreateShader then
+	usedminimap = minimaptex
+	if useBlur then
 		gb:Finalize()
 		gl.DeleteTextureFBO(texOut)
-		texOut = nil
 	end
 	gl.DeleteTextureFBO(fulltex)
-	fulltex = nil
 	gl.DeleteTextureFBO(minimaptex)
-	minimaptex = nil
-	if gl.CreateShader then
+	if fulltex and fulltex ~= usedgrass and fulltex ~= usedminimap then -- delete unused textures
+		glDeleteTexture(fulltex)
+		if texOut and texOut == fulltex then -- texOut = fulltex if gl.CreateShader = nil
+			texOut = nil
+		end
+		fulltex = nil
+	end
+	if minimaptex and minimaptex ~= usedgrass and minimaptex ~= usedminimap then
+		glDeleteTexture(minimaptex)
+		minimaptex = nil
+	end	
+	if texOut and texOut ~= usedgrass and texOut ~= usedminimap then
+		glDeleteTexture(texOut)
+		texOut = nil
+	end	
+	if useBlur then
 		GaussianInitialize(splattex,1.5)
 		gb:Initialize()
 		gb:Execute()
 	else
 		texOut = splattex
 	end
-	Spring.SetMapShadingTexture("$ssmf_splat_distr", splattex)
-	if gl.CreateShader then
+	Spring.SetMapShadingTexture("$ssmf_splat_distr", texOut)
+	usedsplat = texOut
+	if useBlur then
 		gb:Finalize()
 		gl.DeleteTextureFBO(texOut)
-		texOut = nil
 	end
 	gl.DeleteTextureFBO(splattex)
-	splattex = nil
+	if texOut and texOut~=usedsplat then
+		glDeleteTexture(texOut)
+		if splattex and texOut == splattex then -- texOut = splattex if gl.CreateShader = nil
+			splattex = nile
+		end
+		texOut = nil
+	end	
+	if splattex and splattex~=usedsplat then
+		glDeleteTexture(splattex)
+		splattex = nil
+	end	
 	mapfullyprocessed = true
 end
 
