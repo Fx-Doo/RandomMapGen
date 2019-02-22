@@ -445,16 +445,23 @@ if gadgetHandler:IsSyncedCode() then
 				elseif rSize >maxroadsize then
 					rSize = maxroadsize
 				end
-				local dir = rand(1,8)
-				while (dir == lastdir) or (dir + (lastdir or 0) == 9) do
-					dir = rand(1,8)
-				end
+				local attempt = 1
 				local moveAmnt = (min(128,rSize))
-				curX = 	curX + directions[dir].x*moveAmnt		
-				curZ = 	curZ + directions[dir].z*moveAmnt		
+				local dir = rand(1,8)
+				local nextX = curX + directions[dir].x*moveAmnt	
+				local nextZ = curZ + directions[dir].z*moveAmnt		
+				roadcellsaround = (ROADS[nextX - moveAmnt] and ROADS[nextX - moveAmnt][nextZ] and 1 or 0) + (ROADS[nextX + moveAmnt] and ROADS[nextX + moveAmnt][nextZ] and 1 or 0) + (ROADS[nextX] and ROADS[nextX][nextZ - moveAmnt] and 1 or 0) + (ROADS[nextX] and ROADS[nextX][nextZ + moveAmnt] and 1 or 0)
+				while attempt <= 10 and roadcellsaround > 3 do
+					dir = rand(1,8)
+					nextX = curX + directions[dir].x*moveAmnt	
+					nextZ = curZ + directions[dir].z*moveAmnt		
+					roadcellsaround = (ROADS[nextX - moveAmnt] and ROADS[nextX - moveAmnt][nextZ] and 1 or 0) + (ROADS[nextX + moveAmnt] and ROADS[nextX + moveAmnt][nextZ] and 1 or 0) + (ROADS[nextX] and ROADS[nextX][nextZ - moveAmnt] and 1 or 0) + (ROADS[nextX] and ROADS[nextX][nextZ + moveAmnt] and 1 or 0)
+					attempt = attempt + 1
+				end
+
 				lastdir = dir
-				curX = curX - curX%sqr
-				curZ = curZ - curZ%sqr
+				curX = nextX - curX%sqr
+				curZ = nextZ - curZ%sqr
 				for v = 0,rSize -1, sqr do
 					ROADS[curX + v] = ROADS[curX + v] or {}
 					for w = 0,rSize -1, sqr do
