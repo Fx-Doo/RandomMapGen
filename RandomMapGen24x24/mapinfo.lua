@@ -6,7 +6,7 @@
 local mapinfo = {
 	name        = "RandomMapGen24x24",
 	shortname   = "RMG",
-	description = "A random Map generator (12x12)",
+	description = "A random Map generator (24x24)",
 	author      = "Doo",
 	version     = "VERSIONXX",
 	--mutator   = "deployment";
