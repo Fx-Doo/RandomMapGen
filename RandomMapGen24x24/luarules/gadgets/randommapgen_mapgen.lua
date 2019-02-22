@@ -186,7 +186,6 @@ if gadgetHandler:IsSyncedCode() then
 			Cells, Size = FinalSmoothing(Cells, Size)
 		end
 
-		-- Cells, Size = FlattenRoads(Cells, Size)
 		Spring.SetHeightMapFunc(ApplyHeightMap, Cells) -- Apply the height map
 		nbMetalSpots = floor(sqrt(nbTeams) * nbMetalSpots)
 		metalspots = GenerateMetalSpots(nbMetalSpots)
@@ -211,38 +210,6 @@ if gadgetHandler:IsSyncedCode() then
 				SetSmoothMesh(x, z, cells[x][z] * flattenRatio + levelground + 120)
 			end
 		end
-	end
-		
-	function FlattenRoads(cells, size)
-		for i = 1,4 do
-			for x = 0, sizeX, size do
-				for z = 0, sizeZ, size do
-					if roads[x] and roads[x][z] then
-						local additiveValue = 0
-						local ct = 0
-						for k = -3,3 do
-							if cells[x+k*size] then
-							local roadx = roads[x+k*size]
-								for v = -3,3 do
-									if cells[x+k*size][z+v*size] then
-										if k == 0 and v == 0 then
-											mult = (roadlevelfactor or 1)
-										elseif roadx and roads[x+k*size][z+v*size] then
-											mult = (roadlevelfactor or 1)
-										end
-										mult = mult
-										additiveValue = additiveValue + cells[x+k*size][z+v*size] * mult
-										ct = ct + mult
-									end
-								end
-							end
-						end
-						cells[x][z] = additiveValue / ct
-					end
-				end
-			end
-		end
-		return cells, size
 	end
 	
 	
@@ -748,6 +715,8 @@ if gadgetHandler:IsSyncedCode() then
 			sum = sum + tab[x][z+size] * factor
 			num = num + factor
 		end
+		sum = sum + roadHeight*(roadlevelfactor or 0)
+		num = num + (roadlevelfactor or 0)
 		return sum/num
 	end
 	
@@ -778,12 +747,14 @@ if gadgetHandler:IsSyncedCode() then
 				num = num + factor
 			end
 		end
+		sum = sum + roadHeight*(roadlevelfactor or 0)
+		num = num + (roadlevelfactor or 0)
 		return sum/num
 	end
 	
 	function mean8(tab, x, z, size)
-		local sum = 0
-		local num = 0
+		local sum = tab[x][z]
+		local num = 1
 		if x > 0 then
 			sum = sum + tab[x-size][z]	 
 			num = num + 1
