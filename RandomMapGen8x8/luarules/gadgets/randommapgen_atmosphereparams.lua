@@ -18,7 +18,7 @@ elseif Game and Game.version then
 end
 
 -- fixed: https://springrts.com/mantis/view.php?id=5864
-if not ((engineVersion < 1000 and engineVersion <= 105) or engineVersion >= 10401803) then
+if not ((engineVersion < 1000 and engineVersion <= 105) or engineVersion >= 10401803) or (Game and Game.version and tonumber(Game.version) == 103) then
 	return
 end
 

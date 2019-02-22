@@ -51,6 +51,14 @@ if (gadgetHandler:IsSyncedCode()) then  --Sync
 				end
 			end
 		end
+		if not replacementTrees[1] then
+			for featureDefID, featureDef in pairs(FeatureDefs) do
+				if string.find(featureDef.name, "tree") then
+					count = count + 1
+					replacementTrees[count] = featureDefID
+				end 
+			end
+		end
 		
 		-- Get Random positions
 		local ctTrees = 0
