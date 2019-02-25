@@ -41,6 +41,26 @@ if gadgetHandler:IsSyncedCode() then
 	function gadget:Initialize()
 		local typemap = Spring.GetGameRulesParam("typemap")
 		local minw, maxw
+		local r = math.random
+		if typemap == "arctic" then
+			minw = r(3,8)
+			maxw = r(13,20)
+		elseif typemap == "temperate" then
+			minw = r(2,4)
+			maxw = r(8,13)
+		elseif typemap == "desert" then
+			minw = r(1,2)
+			maxw = r(8,16)
+		else
+			minw = 0
+			maxw = 1
+		end
+		Spring.SetWind(minw,maxw)
+	end
+else
+local useShadingTextures = Spring.GetConfigInt("AdvMapShading") == 1
+	function gadget:Initialize()
+		local typemap = Spring.GetGameRulesParam("typemap")
 		local aparams = {}
 		local sparam = {}
 		local r = math.random
@@ -57,8 +77,6 @@ if gadgetHandler:IsSyncedCode() then
 			unitAmbientColor = {0.4, 0.4, 0.4},
 			unitDiffuseColor = {0.85, 0.85, 0.85},
 			}
-			minw = r(3,8)
-			maxw = r(13,20)
 		elseif typemap == "temperate" then
 			aparams = {
 			sunColor = {1, 0.8, 0.4, 1},
@@ -72,12 +90,12 @@ if gadgetHandler:IsSyncedCode() then
 			unitAmbientColor = {0.3, 0.2, 0.3},
 			unitDiffuseColor = {0.8, 0.8, 0.8},
 			}
-			minw = r(2,4)
-			maxw = r(8,13)
 		elseif typemap == "desert" then
-			Spring.SetMapRenderingParams({
-			   splatTexScales = {0.006, 0.01, 0.02, 0.02},
-			})
+			if useShadingTextures then
+				Spring.SetMapRenderingParams({
+				   splatTexScales = {0.006, 0.01, 0.02, 0.02},
+				})
+			end
 			aparams = {
 			sunColor = {1, 0.8, 0.4, 1},
 			skyColor = {0.1, 0.2, 0.9, 1},
@@ -90,12 +108,12 @@ if gadgetHandler:IsSyncedCode() then
 			unitAmbientColor = {0.8, 0.8, 0.8},
 			unitDiffuseColor = {1, 1, 1},
 			}
-			minw = r(1,2)
-			maxw = r(8,16)
 		else
-			Spring.SetMapRenderingParams({
-			   splatTexScales = {0.02, 0.015, 0.02, 0.02},
-			})
+			if useShadingTextures then
+				Spring.SetMapRenderingParams({
+				   splatTexScales = {0.02, 0.015, 0.02, 0.02},
+				})
+			end
 			aparams = {
 			sunColor = {1, 0.8, 0.8, 1},
 			skyColor = {0, 0, 0, 1},
@@ -108,12 +126,9 @@ if gadgetHandler:IsSyncedCode() then
 			unitAmbientColor = {0.4, 0.4, 0.4},
 			unitDiffuseColor = {1, 1, 1},
 			}
-			minw = 0
-			maxw = 1
 		end
 		Spring.SetAtmosphere(aparams)
 		Spring.SetSunLighting(sparams)
-		Spring.SetWind(minw,maxw)
 	end
 end
 
