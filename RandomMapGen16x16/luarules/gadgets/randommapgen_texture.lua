@@ -13,8 +13,11 @@ end
 
 local useBlur = false
 
-local MAP_WIDTH = Game.mapSizeX
-local MAP_HEIGHT = Game.mapSizeZ
+local mapSizeX = Game.mapSizeX
+local mapSizeZ = Game.mapSizeZ
+
+local MAP_WIDTH = mapSizeX
+local MAP_HEIGHT = mapSizeZ
 local SQUARE_SIZE = 1024
 local SQUARES_X = MAP_WIDTH/SQUARE_SIZE
 local SQUARES_Z = MAP_HEIGHT/SQUARE_SIZE
@@ -23,6 +26,9 @@ local UHM_HEIGHT = 64
 local UHM_X = UHM_WIDTH/MAP_WIDTH
 local UHM_Z = UHM_HEIGHT/MAP_HEIGHT
 local BLOCK_SIZE = 16
+local drawOffset = 2 * BLOCK_SIZE/mapSizeZ - 1 
+local mapSizeFacX = 2/mapSizeX
+local mapSizeFacZ = 2/mapSizeX
 
 local spSetMapSquareTexture = Spring.SetMapSquareTexture
 local spGetMapSquareTexture = Spring.GetMapSquareTexture
@@ -190,34 +196,27 @@ local function drawTextureOnSquare(x,z,size,sx,sz,xsize, zsize)
 end
 
 local function drawTextureOnMapTex(x,z)
-	local x1 = 2*x/Game.mapSizeX - 1
-	local z1 = 2*z/Game.mapSizeZ - 1
-	local x2 = 2*(x+BLOCK_SIZE)/Game.mapSizeX - 1
-	local z2 = 2*(z+BLOCK_SIZE)/Game.mapSizeZ - 1
+	local x1 = 2*x/mapSizeX - 1
+	local z1 = 2*z/mapSizeZ - 1
+	local x2 = 2*(x+BLOCK_SIZE)/mapSizeX - 1
+	local z2 = 2*(z+BLOCK_SIZE)/mapSizeZ - 1
 	glTexRect(x1,z1,x2,z2)
 end
 
 local function drawSplatTextureOnMapTex(x,z)
-	local x1 = 2*x/Game.mapSizeX - 1
-	local z1 = 2*z/Game.mapSizeZ - 1
-	local x2 = 2*(x+BLOCK_SIZE)/Game.mapSizeX - 1
-	local z2 = 2*(z+BLOCK_SIZE)/Game.mapSizeZ - 1
+	local x1 = 2*x/mapSizeX - 1
+	local z1 = 2*z/mapSizeZ - 1
+	local x2 = 2*(x+BLOCK_SIZE)/mapSizeX - 1
+	local z2 = 2*(z+BLOCK_SIZE)/mapSizeZ - 1
 	glRect(x1,z1,x2,z2)
 end
 
-local function drawTextureOnMiniMapTex(x,z)
-	local x1 = 2*x/(Game.mapSizeX) - 1
-	local z1 = 2*z/(Game.mapSizeZ) - 1
-	local x2 = 2*(x+BLOCK_SIZE)/(Game.mapSizeX) - 1
-	local z2 = 2*(z+BLOCK_SIZE)/(Game.mapSizeZ) - 1
-	glTexRect(x1,z1,x2,z2)
+local function drawtexblockontex(x,z)
+	glTexRect(x*mapSizeFacX -1,z*mapSizeFacZ - 1,x*mapSizeFacX + drawOffset,z*mapSizeFacZ + drawOffset)
 end
-local function drawSplatTextureOnMiniMapTex(x,z)
-	local x1 = 2*x/(Game.mapSizeX) - 1
-	local z1 = 2*z/(Game.mapSizeZ) - 1
-	local x2 = 2*(x+BLOCK_SIZE)/(Game.mapSizeX) - 1
-	local z2 = 2*(z+BLOCK_SIZE)/(Game.mapSizeZ) - 1
-	glRect(x1,z1,x2,z2)
+
+local function drawcolorblockontex(x,z)
+	glRect(x*mapSizeFacX -1,z*mapSizeFacZ - 1,x*mapSizeFacX + drawOffset,z*mapSizeFacZ + drawOffset)
 end
 
 local function drawCopySquare()
@@ -369,6 +368,7 @@ function gadget:DrawGenesis()
 	if mapfullyprocessed == true then
 		return
 	end
+	local DrawStart = Spring.GetTimer()
 	if useBlur == true and not (gl.CreateShader) then
 		useBlur = false
 	end
@@ -376,7 +376,7 @@ function gadget:DrawGenesis()
 	local usedgrass
 	local usedminimap
 	if not fulltex then -- create fullsize blank tex
-		fulltex = gl.CreateTexture(Game.mapSizeX/BLOCK_SIZE,Game.mapSizeZ/BLOCK_SIZE,
+		fulltex = gl.CreateTexture(mapSizeX/BLOCK_SIZE,mapSizeZ/BLOCK_SIZE,
 		{
 			border = false,
 			min_filter = GL.LINEAR,
@@ -386,19 +386,9 @@ function gadget:DrawGenesis()
 			fbo = true,
 		})
 	end
-	if not minimaptex then -- create fullsize blank tex
-		minimaptex = gl.CreateTexture(Game.mapSizeX/BLOCK_SIZE,Game.mapSizeZ/BLOCK_SIZE,
-		{
-			border = false,
-			min_filter = GL.LINEAR,
-			mag_filter = GL.LINEAR,
-			wrap_s = GL.CLAMP_TO_EDGE,
-			wrap_t = GL.CLAMP_TO_EDGE,
-			fbo = true,
-		})
-	end
+	Spring.Echo("Generated blank fulltex")
 	if not splattex then -- create fullsize blank tex
-		splattex = gl.CreateTexture(Game.mapSizeX/BLOCK_SIZE,Game.mapSizeZ/BLOCK_SIZE,
+		splattex = gl.CreateTexture(mapSizeX/BLOCK_SIZE,mapSizeZ/BLOCK_SIZE,
 		{
 			format = GL_RGBA32F,
 			border = false,
@@ -409,27 +399,30 @@ function gadget:DrawGenesis()
 			fbo = true,
 		})
 	end
-	for texid, itable in pairs(mapTex) do
-		local tex = texturePool[texid].texture
-		glTexture(tex)
-		for i, pos in pairs(itable) do
-			local x = pos.x
-			local z = pos.z
-			gl.RenderToTexture(fulltex, drawTextureOnMapTex, x, z)
-			gl.RenderToTexture(minimaptex, drawTextureOnMiniMapTex, x, z)
+	Spring.Echo("Generated blank splattex")
+	local ago = Spring.GetTimer()
+	for i = 1, 20 do
+		glTexture(texturePool[i].texture)
+		for k = 1, ctTEX[i]-1 do
+			local pos = mapTex[i][k]
+			gl.RenderToTexture(fulltex, drawtexblockontex, pos.x, pos.z)
 		end
 		glTexture(false)
 	end
-	for texid, itable in pairs(splatTex) do
-		local color = splatDetailTexPool[texid]
-		glColor(color[1],color[2],color[3],color[4])
-		for i, pos in pairs(itable) do
-			local x = pos.x
-			local z = pos.z
-			glRenderToTexture(splattex, drawSplatTextureOnMapTex, x, z)
+	local cur = Spring.GetTimer()
+	Spring.Echo("FullTex rendered in: "..(Spring.DiffTimers(cur, ago, true)))
+	local ago2 = Spring.GetTimer()
+	for i = 1, 4 do
+		glColor(splatDetailTexPool[i])
+		for k = 1, ctsplat[i]-1 do
+			local pos = splatTex[i][k]
+			glRenderToTexture(splattex, drawcolorblockontex, pos.x, pos.z)
+			Spring.ClearWatchDogTimer()
 		end
 		glColor(1,1,1,1)
 	end
+	cur = Spring.GetTimer()
+	Spring.Echo("Splattex rendered in: "..(Spring.DiffTimers(cur, ago2, true)))
 	if not fulltex then
 		return
 	end
@@ -440,10 +433,13 @@ function gadget:DrawGenesis()
 	else
 		texOut = fulltex
 	end
-	for x = 0,Game.mapSizeX - 1, SQUARE_SIZE do -- Create sqr textures for each sqr
-		for z = 0,Game.mapSizeZ - 1, SQUARE_SIZE do
+
+	Spring.Echo("Starting to render SquareTextures")
+	local ago3 = Spring.GetTimer()
+	for x = 0,mapSizeX - 1, SQUARE_SIZE do -- Create sqr textures for each sqr
+		for z = 0,mapSizeZ - 1, SQUARE_SIZE do
 			sqrTex[x] = sqrTex[x] or {}
-			sqrTex[x][z] = glCreateTexture(SQUARE_SIZE,SQUARE_SIZE,
+			sqrTex[x][z] = glCreateTexture(SQUARE_SIZE/BLOCK_SIZE,SQUARE_SIZE/BLOCK_SIZE,
 			{
 				border = false,
 				min_filter = GL.LINEAR,
@@ -452,26 +448,26 @@ function gadget:DrawGenesis()
 				wrap_t = GL.CLAMP_TO_EDGE,
 				fbo = true,
 			})
-			glTexture(texOut) -- apply corresponding part of fulltex to each sqrTex 
-			glRenderToTexture(sqrTex[x][z], drawTextureOnSquare, 0,0,SQUARE_SIZE, x/Game.mapSizeX, z/Game.mapSizeZ, SQUARE_SIZE/Game.mapSizeX, SQUARE_SIZE/Game.mapSizeZ)
+			glTexture(texOut)
+			glRenderToTexture(sqrTex[x][z], drawTextureOnSquare, 0,0,SQUARE_SIZE, x/mapSizeX, z/mapSizeZ, SQUARE_SIZE/mapSizeX, SQUARE_SIZE/mapSizeZ)
 			glTexture(false)
-			
-			gl.GenerateMipmap(sqrTex[x][z]) -- generate mipmap and apply texture to square
+			gl.GenerateMipmap(sqrTex[x][z])
 			Spring.SetMapSquareTexture((x/SQUARE_SIZE),(z/SQUARE_SIZE), sqrTex[x][z])
-			-- gl.DeleteTexture(sqrTex[x][z])
 			sqrTex[x][z] = nil
 		end
 	end
+	cur = Spring.GetTimer()
+	Spring.Echo("All squaretex rendered and applied in: "..(Spring.DiffTimers(cur, ago3, true)))
 	Spring.SetMapShadingTexture("$grass", texOut)
 	usedgrass = texOut
-	Spring.SetMapShadingTexture("$minimap", minimaptex)
-	usedminimap = minimaptex
+	Spring.SetMapShadingTexture("$minimap", texOut)
+	usedminimap = texOut
+	Spring.Echo("Applied grass and minimap textures")
 	if useBlur then
 		gb:Finalize()
 		gl.DeleteTextureFBO(texOut)
 	end
 	gl.DeleteTextureFBO(fulltex)
-	gl.DeleteTextureFBO(minimaptex)
 	if fulltex and fulltex ~= usedgrass and fulltex ~= usedminimap then -- delete unused textures
 		glDeleteTexture(fulltex)
 		if texOut and texOut == fulltex then -- texOut = fulltex if gl.CreateShader = nil
@@ -479,10 +475,6 @@ function gadget:DrawGenesis()
 		end
 		fulltex = nil
 	end
-	if minimaptex and minimaptex ~= usedgrass and minimaptex ~= usedminimap then
-		glDeleteTexture(minimaptex)
-		minimaptex = nil
-	end	
 	if texOut and texOut ~= usedgrass and texOut ~= usedminimap then
 		glDeleteTexture(texOut)
 		texOut = nil
@@ -496,6 +488,7 @@ function gadget:DrawGenesis()
 	end
 	Spring.SetMapShadingTexture("$ssmf_splat_distr", texOut)
 	usedsplat = texOut
+	Spring.Echo("Applied splat texture")
 	if useBlur then
 		gb:Finalize()
 		gl.DeleteTextureFBO(texOut)
@@ -513,26 +506,33 @@ function gadget:DrawGenesis()
 		splattex = nil
 	end	
 	mapfullyprocessed = true
+	local DrawEnd = Spring.GetTimer()
+	Spring.Echo("map fully processed in: "..(Spring.DiffTimers(DrawEnd, DrawStart, true)))
 end
 
 local function UpdateAll()
+	local ago = Spring.GetTimer()
 	local ENVIR = Spring.GetGameRulesParam("typemap")
-	for x = 0, Game.mapSizeX-1, BLOCK_SIZE do
-		for z = 0, Game.mapSizeZ-1, BLOCK_SIZE do
+	splatTex = {{},{},{},{}}	
+	mapTex = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}}
+	ctsplat = {1,1,1,1}
+	ctTEX = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+	for x = 0, mapSizeX-1, BLOCK_SIZE do
+		for z = 0, mapSizeZ-1, BLOCK_SIZE do
 			local TANK = SpTestMoveOrder(UnitDefNames["armstump"].id, x, 0,z, 0,0,0, true, false, true)
 			local KBOT = SpTestMoveOrder(UnitDefNames["armpw"].id, x, 0,z, 0,0,0, true, false, true)
 			local METAL = SpGetMetalAmount(floor(x/16), floor(z/16)) > 0
 			local UW = SpTestBuildOrder(UnitDefNames["armfmine3"].id, x, 0,z, 0) == 0	
 			local tex = SlopeType(x, z, TANK, KBOT, METAL, UW, ENVIR)
 			local splat = SplatSlopeType(x, z, TANK, KBOT, METAL, UW, ENVIR)
-			mapTex[tex] = mapTex[tex] or {}
-			local ct = #mapTex[tex]
-			mapTex[tex][ct + 1] = {x = x, z = z}
-			splatTex[splat] = splatTex[splat] or {}
-			local ctsplat = #splatTex[splat]
-			splatTex[splat][ctsplat + 1] = {x = x, z = z}
+			mapTex[tex][ctTEX[tex]] = {x = x, z = z}
+			ctTEX[tex] = ctTEX[tex] + 1
+			splatTex[splat][ctsplat[splat]] = {x = x, z = z}
+			ctsplat[splat] = ctsplat[splat] + 1
 		end
 	end
+	local cur = Spring.GetTimer()
+	Spring.Echo("Map scanned in: "..(Spring.DiffTimers(cur, ago, true)))
 end
 
 local function Shutdown()

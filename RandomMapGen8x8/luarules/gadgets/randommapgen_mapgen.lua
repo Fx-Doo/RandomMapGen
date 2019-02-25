@@ -164,26 +164,31 @@ if gadgetHandler:IsSyncedCode() then
 		
 		while Size >= sqr*2^5 do -- use diamond square rendering for startingSize => squareSize * 8
 			Cells,Size,Heightranges = SquareDiamond(Cells, Size, Heightranges)
+			Spring.ClearWatchDogTimer()
 		end
 		
 		Cells,Size = ApplySymmetry(Cells,Size, symTable) -- Reapply the symetry
 		
 		while Size >= sqr*2^3 do -- use diamond square rendering for startingSize => squareSize * 4
 			Cells,Size,Heightranges = SquareDiamond(Cells, Size, Heightranges)
+			Spring.ClearWatchDogTimer()
 		end
 		
 		Cells,Size = GroupCellsByHeight(Cells,Size) -- Apply congruence to cells heights
 		CreateSmoothMesh(Cells,Size)
 		while Size >= sqr*2 do
 			Cells,Size = SquareDiamondSmoothing(Cells, Size) -- Complete rendering to squareSize/2
+			Spring.ClearWatchDogTimer()
 		end
 		
 		while Size >= sqr*2 do -- failsafe to make sure final stage is squareSize/2
 			Cells,Size = FinishCells(Cells,Size)
+			Spring.ClearWatchDogTimer()
 		end
 		
 		for i = 1,nbSmooth do -- smooth (mean of 8 closest cells), repeated 5 times
 			Cells, Size = FinalSmoothing(Cells, Size)
+			Spring.ClearWatchDogTimer()
 		end
 
 		Spring.SetHeightMapFunc(ApplyHeightMap, Cells) -- Apply the height map
@@ -395,6 +400,7 @@ if gadgetHandler:IsSyncedCode() then
 					end
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		roads = newroads
 		mountains = newmountains
@@ -410,6 +416,7 @@ if gadgetHandler:IsSyncedCode() then
 					end
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		return cells, size
 	end
@@ -472,6 +479,7 @@ if gadgetHandler:IsSyncedCode() then
 					break
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end	
 		return ROADS
 	end
@@ -496,6 +504,7 @@ if gadgetHandler:IsSyncedCode() then
 					end
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		return MOUNTAINS
 	end
@@ -512,6 +521,7 @@ if gadgetHandler:IsSyncedCode() then
 				end
 				SetHeightMap(x,z, height )
 			end
+			Spring.ClearWatchDogTimer()
 		end
 	end
 	
@@ -541,6 +551,7 @@ if gadgetHandler:IsSyncedCode() then
 					end
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		return cells, newsize
 	end
@@ -584,6 +595,7 @@ if gadgetHandler:IsSyncedCode() then
 					end
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		variance = 0
 		nCells = 0
@@ -602,6 +614,7 @@ if gadgetHandler:IsSyncedCode() then
 				variance = (variance*nCells + (cells[x][z] - meanHeight)^2) / (nCells+1)
 				nCells = nCells + 1
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		heightranges = heightranges/2
 		return cells, newsize, heightranges
@@ -621,6 +634,7 @@ if gadgetHandler:IsSyncedCode() then
 					end
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		for x = 0,sizeX,newsize do -- Edges
 			local roadx = roads[x] ~= nil
@@ -634,6 +648,7 @@ if gadgetHandler:IsSyncedCode() then
 					end
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		return cells, newsize
 	end
@@ -646,6 +661,7 @@ if gadgetHandler:IsSyncedCode() then
 					levelground = max(-cells[x][z] + 20,levelground)
 				end
 			end
+			Spring.ClearWatchDogTimer()
 		end
 		return cells, size
 	end
