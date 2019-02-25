@@ -43,6 +43,7 @@ local SpTestBuildOrder = Spring.TestBuildOrder
 if (gadgetHandler:IsSyncedCode()) then
 
 else
+local useShadingTextures = Spring.GetConfigInt("AdvMapShading") == 1
 local sqrTex = {}
 local glTexture = gl.Texture
 local glColor = gl.Color
@@ -167,8 +168,8 @@ local texturePool = {
 	},
 }
 
-local LuaShader = VFS.Include("LuaRules/gadgets/libs/LuaShader.lua")
-local GaussianBlur = VFS.Include("LuaRules/gadgets/libs/GaussianBlur.lua")
+-- local LuaShader = VFS.Include("LuaRules/gadgets/libs/LuaShader.lua")
+-- local GaussianBlur = VFS.Include("LuaRules/gadgets/libs/GaussianBlur.lua")
 local GL_RGBA = 0x1908
 local GL_RGBA16F = 0x881A
 local GL_RGBA32F = 0x8814
@@ -333,33 +334,33 @@ function SetTextureSet(textureSetName)
 }
 end
 
-function GaussianInitialize(fullTex, strength)
+-- function GaussianInitialize(fullTex, strength)
 
-	texIn = fullTex
-	texOut = gl.CreateTexture(SQUARE_SIZE,SQUARE_SIZE,
-	{
-		format = GL_RGBA16F,
-		border = false,
-		min_filter = GL.LINEAR,
-		mag_filter = GL.LINEAR,
-		wrap_s = GL.CLAMP_TO_EDGE,
-		wrap_t = GL.CLAMP_TO_EDGE,
-		fbo = true,
-	})
+	-- texIn = fullTex
+	-- texOut = gl.CreateTexture(SQUARE_SIZE,SQUARE_SIZE,
+	-- {
+		-- format = GL_RGBA16F,
+		-- border = false,
+		-- min_filter = GL.LINEAR,
+		-- mag_filter = GL.LINEAR,
+		-- wrap_s = GL.CLAMP_TO_EDGE,
+		-- wrap_t = GL.CLAMP_TO_EDGE,
+		-- fbo = true,
+	-- })
 
-	--(texIn, texOut, unusedTexId, downScale, linearSampling, sigma, halfKernelSize, valMult, repeats, blurTexIntFormat)
-	gb = GaussianBlur({
-		texIn = texIn,
-		texOut = texOut,
-		unusedTexId = nil,
-		downScale = 2,
-		linearSampling = true,
-		sigma = 3.0/BLOCK_SIZE,
-		halfKernelSize = 5,
-		valMult = 1.0,
-		repeats = 2,
-		blurTexIntFormat = GL_RGBA16F})
-end
+	-- -- (texIn, texOut, unusedTexId, downScale, linearSampling, sigma, halfKernelSize, valMult, repeats, blurTexIntFormat)
+	-- gb = GaussianBlur({
+		-- texIn = texIn,
+		-- texOut = texOut,
+		-- unusedTexId = nil,
+		-- downScale = 2,
+		-- linearSampling = true,
+		-- sigma = 3.0/BLOCK_SIZE,
+		-- halfKernelSize = 5,
+		-- valMult = 1.0,
+		-- repeats = 2,
+		-- blurTexIntFormat = GL_RGBA16F})
+-- end
 
 function gadget:DrawGenesis()
 	if initialized ~= true then
@@ -369,9 +370,9 @@ function gadget:DrawGenesis()
 		return
 	end
 	local DrawStart = Spring.GetTimer()
-	if useBlur == true and not (gl.CreateShader) then
-		useBlur = false
-	end
+	-- if useBlur == true and not (gl.CreateShader) then
+		-- useBlur = false
+	-- end
 	local usedsplat
 	local usedgrass
 	local usedminimap
@@ -387,7 +388,7 @@ function gadget:DrawGenesis()
 		})
 	end
 	Spring.Echo("Generated blank fulltex")
-	if not splattex then -- create fullsize blank tex
+	if useShadingTextures and not splattex then -- create fullsize blank tex
 		splattex = gl.CreateTexture(mapSizeX/BLOCK_SIZE,mapSizeZ/BLOCK_SIZE,
 		{
 			format = GL_RGBA32F,
@@ -411,29 +412,30 @@ function gadget:DrawGenesis()
 	end
 	local cur = Spring.GetTimer()
 	Spring.Echo("FullTex rendered in: "..(Spring.DiffTimers(cur, ago, true)))
-	local ago2 = Spring.GetTimer()
-	for i = 1, 4 do
-		glColor(splatDetailTexPool[i])
-		for k = 1, ctsplat[i]-1 do
-			local pos = splatTex[i][k]
-			glRenderToTexture(splattex, drawcolorblockontex, pos.x, pos.z)
-			Spring.ClearWatchDogTimer()
+	if useShadingTextures  then
+		local ago2 = Spring.GetTimer()
+		for i = 1, 4 do
+			glColor(splatDetailTexPool[i])
+			for k = 1, ctsplat[i]-1 do
+				local pos = splatTex[i][k]
+				glRenderToTexture(splattex, drawcolorblockontex, pos.x, pos.z)
+				Spring.ClearWatchDogTimer()
+			end
+			glColor(1,1,1,1)
 		end
-		glColor(1,1,1,1)
+		cur = Spring.GetTimer()
+		Spring.Echo("Splattex rendered in: "..(Spring.DiffTimers(cur, ago2, true)))
 	end
-	cur = Spring.GetTimer()
-	Spring.Echo("Splattex rendered in: "..(Spring.DiffTimers(cur, ago2, true)))
 	if not fulltex then
 		return
 	end
-	if useBlur then
-		GaussianInitialize(fulltex,3)
-		gb:Initialize()
-		gb:Execute()
-	else
+	-- if useBlur then
+		-- GaussianInitialize(fulltex,3)
+		-- gb:Initialize()
+		-- gb:Execute()
+	-- else
 		texOut = fulltex
-	end
-
+	-- end
 	Spring.Echo("Starting to render SquareTextures")
 	local ago3 = Spring.GetTimer()
 	for x = 0,mapSizeX - 1, SQUARE_SIZE do -- Create sqr textures for each sqr
@@ -458,15 +460,17 @@ function gadget:DrawGenesis()
 	end
 	cur = Spring.GetTimer()
 	Spring.Echo("All squaretex rendered and applied in: "..(Spring.DiffTimers(cur, ago3, true)))
-	Spring.SetMapShadingTexture("$grass", texOut)
-	usedgrass = texOut
-	Spring.SetMapShadingTexture("$minimap", texOut)
-	usedminimap = texOut
-	Spring.Echo("Applied grass and minimap textures")
-	if useBlur then
-		gb:Finalize()
-		gl.DeleteTextureFBO(texOut)
+	if useShadingTextures then
+		Spring.SetMapShadingTexture("$grass", texOut)
+		usedgrass = texOut
+		Spring.SetMapShadingTexture("$minimap", texOut)
+		usedminimap = texOut
+		Spring.Echo("Applied grass and minimap textures")
 	end
+	-- if useBlur then
+		-- gb:Finalize()
+		-- gl.DeleteTextureFBO(texOut)
+	-- end
 	gl.DeleteTextureFBO(fulltex)
 	if fulltex and fulltex ~= usedgrass and fulltex ~= usedminimap then -- delete unused textures
 		glDeleteTexture(fulltex)
@@ -479,32 +483,34 @@ function gadget:DrawGenesis()
 		glDeleteTexture(texOut)
 		texOut = nil
 	end	
-	if useBlur then
-		GaussianInitialize(splattex,1.5)
-		gb:Initialize()
-		gb:Execute()
-	else
-		texOut = splattex
+	if useShadingTextures then
+		-- if useBlur then
+			-- GaussianInitialize(splattex,1.5)
+			-- gb:Initialize()
+			-- gb:Execute()
+		-- else
+			texOut = splattex
+		-- end
+		Spring.SetMapShadingTexture("$ssmf_splat_distr", texOut)
+		usedsplat = texOut
+		Spring.Echo("Applied splat texture")
+		-- if useBlur then
+			-- gb:Finalize()
+			-- gl.DeleteTextureFBO(texOut)
+		-- end
+		gl.DeleteTextureFBO(splattex)
+		if texOut and texOut~=usedsplat then
+			glDeleteTexture(texOut)
+			if splattex and texOut == splattex then -- texOut = splattex if gl.CreateShader = nil
+				splattex = nile
+			end
+			texOut = nil
+		end	
+		if splattex and splattex~=usedsplat then
+			glDeleteTexture(splattex)
+			splattex = nil
+		end	
 	end
-	Spring.SetMapShadingTexture("$ssmf_splat_distr", texOut)
-	usedsplat = texOut
-	Spring.Echo("Applied splat texture")
-	if useBlur then
-		gb:Finalize()
-		gl.DeleteTextureFBO(texOut)
-	end
-	gl.DeleteTextureFBO(splattex)
-	if texOut and texOut~=usedsplat then
-		glDeleteTexture(texOut)
-		if splattex and texOut == splattex then -- texOut = splattex if gl.CreateShader = nil
-			splattex = nile
-		end
-		texOut = nil
-	end	
-	if splattex and splattex~=usedsplat then
-		glDeleteTexture(splattex)
-		splattex = nil
-	end	
 	mapfullyprocessed = true
 	local DrawEnd = Spring.GetTimer()
 	Spring.Echo("map fully processed in: "..(Spring.DiffTimers(DrawEnd, DrawStart, true)))
@@ -529,6 +535,26 @@ local function UpdateAll()
 			ctTEX[tex] = ctTEX[tex] + 1
 			splatTex[splat][ctsplat[splat]] = {x = x, z = z}
 			ctsplat[splat] = ctsplat[splat] + 1
+		end
+	end
+	local cur = Spring.GetTimer()
+	Spring.Echo("Map scanned in: "..(Spring.DiffTimers(cur, ago, true)))
+end
+
+local function UpdateAllNoSplat()
+	local ago = Spring.GetTimer()
+	local ENVIR = Spring.GetGameRulesParam("typemap")
+	mapTex = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}}
+	ctTEX = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+	for x = 0, mapSizeX-1, BLOCK_SIZE do
+		for z = 0, mapSizeZ-1, BLOCK_SIZE do
+			local TANK = SpTestMoveOrder(UnitDefNames["armstump"].id, x, 0,z, 0,0,0, true, false, true)
+			local KBOT = SpTestMoveOrder(UnitDefNames["armpw"].id, x, 0,z, 0,0,0, true, false, true)
+			local METAL = SpGetMetalAmount(floor(x/16), floor(z/16)) > 0
+			local UW = SpTestBuildOrder(UnitDefNames["armfmine3"].id, x, 0,z, 0) == 0	
+			local tex = SlopeType(x, z, TANK, KBOT, METAL, UW, ENVIR)
+			mapTex[tex][ctTEX[tex]] = {x = x, z = z}
+			ctTEX[tex] = ctTEX[tex] + 1
 		end
 	end
 	local cur = Spring.GetTimer()
@@ -613,7 +639,11 @@ function gadget:Initialize()
 		return
 	end
 	SetTextureSet(Spring.GetGameRulesParam("typemap"))
-	UpdateAll()
+	if useShadingTextures then
+		UpdateAll()
+	else
+		UpdateAllNoSplat()
+	end
 	initialized = true
 	activestate = true
 end
